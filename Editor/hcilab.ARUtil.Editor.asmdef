@@ -1,0 +1,18 @@
+{
+    "name": "hcilab.ARUtil.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f315679a48c01b64a91700c0258daa4a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
