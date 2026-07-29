@@ -69,18 +69,10 @@ public class AnchorData : ScriptableObject
     {
         return d_AprilTagAnchor[id];
     }
-
-    //{
-    //    get {
-
-    //        foreach (int id in d_AprilTagAnchor.Keys.ToList())
-    //        {
-    //            var tempPair = d_tagLostCountdowns[tagData];
-    //            tempPair.detected = false;
-    //            d_tagLostCountdowns[tagData] = tempPair;
-    //        }
-    //    }
-    //}; // store apriltag id and associated anchor
-
-
+    public void ResetAnchors()
+    {
+        d_ImageAnchor.Clear();
+        d_AprilTagAnchor.Clear();
+        AnchorsUpdated?.Invoke();
+    }
 }

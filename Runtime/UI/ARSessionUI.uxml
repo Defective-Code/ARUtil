@@ -1,8 +1,6 @@
-<UXML xmlns="UnityEngine.UIElements">
-    <VisualElement name="ar-session-ui" style="flex-grow: 1;">
-        <Slider name="stabilization-loading" low-value="0" high-value="1"
-                style="position: absolute; bottom: 40px; left: 20px; right: 20px;" />
-        <Button name="reset-anchor-button" text="Reset Anchor"
-                style="position: absolute; bottom: 80px; left: 20px; width: 150px;" />
+<UXML xmlns="UnityEngine.UIElements" editor-extension-mode="False">
+    <VisualElement name="ar-session-ui" style="flex-grow: 1; justify-content: center;">
+        <Button name="reset-anchor-button" text="Reset Anchor" style="position: relative; bottom: auto; left: auto; width: 150px; align-items: center; align-self: center; justify-content: flex-start;"/>
+        <Slider name="stabilization-loading" low-value="0" high-value="1" style="position: relative; bottom: auto; left: auto; right: auto; align-self: center; height: 29px; width: 256px; justify-content: flex-start;"/>
     </VisualElement>
 </UXML>
