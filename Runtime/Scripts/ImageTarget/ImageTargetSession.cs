@@ -18,8 +18,8 @@ public class ImageTargetSession : MonoBehaviour
     [SerializeField]
     XRReferenceImageLibrary imagesTargets;
 
-    [SerializeField]
-    GameObject debugPrefab;
+    //[SerializeField]
+    //GameObject debugPrefab;
 
     [SerializeField]
     PanelRenderer panelRenderer; // replaces direct Slider/Button references
@@ -27,8 +27,8 @@ public class ImageTargetSession : MonoBehaviour
     Slider ui_StabilizationLoading;
     Button ui_ResetAnchorButton;
 
-    [SerializeField]
-    GameObject child;
+    //[SerializeField]
+    //GameObject child;
 
     [SerializeField]
     int se_timeToTrack = 3;
@@ -41,6 +41,13 @@ public class ImageTargetSession : MonoBehaviour
     Dictionary<string, GameObject> d_namesChildren = new();
 
     string v_currentTracking;
+
+    // Function to reset all the data stuff stored in this class
+    public void ClearData()
+    {
+        d_Times.Clear();
+        v_currentTracking = null;
+    }
 
     private void OnValidate()
     {
@@ -103,8 +110,10 @@ public class ImageTargetSession : MonoBehaviour
 
     void Awake()
     {
+        // We want to disable all the children representations so they are not visible in the scene
         foreach (Transform child in transform)
         {
+            child.gameObject.SetActive(false); // templates only, never rendered directly
             d_namesChildren.Add(child.name, child.gameObject);
         }
     }
@@ -159,8 +168,9 @@ public class ImageTargetSession : MonoBehaviour
                     {
                         if (d_Times[imageName] >= se_timeToTrack)
                         {
-                            CreateImageAnchor(updatedImage, d_namesChildren[updatedImage.referenceImage.name]);
+                            d_Times[imageName] = 0f;
                             ui_StabilizationLoading.value = 0f;
+                            CreateImageAnchor(updatedImage, d_namesChildren[updatedImage.referenceImage.name]);
                         }
                         else
                         {
@@ -185,11 +195,11 @@ public class ImageTargetSession : MonoBehaviour
         }
     }
 
-    async void CreateImageAnchor(ARTrackedImage image, GameObject child)
+    async void CreateImageAnchor(ARTrackedImage image, GameObject templateChild)
     {
         Debug.Log("Creating Image Anchor");
 
-        MarkerSettings childSettings = child.GetComponent<MarkerSettings>();
+        MarkerSettings childSettings = templateChild.GetComponent<MarkerSettings>();
         bool worldOrient = childSettings.orientRelToAnchor;
         Quaternion flatRotation = Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0);
         Pose imagePose = worldOrient ? new Pose(image.transform.position, flatRotation) : new Pose(image.transform.position, image.transform.rotation);
@@ -199,14 +209,16 @@ public class ImageTargetSession : MonoBehaviour
         {
             var anchor = result.value;
 
-            if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
+            //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
 
-            child.transform.SetParent(anchor.transform, false);
-            child.transform.localRotation = Quaternion.identity;
-            child.transform.localPosition = Vector3.zero;
+            GameObject instance = Instantiate(templateChild, anchor.transform);
+            //instance.transform.SetParent(anchor.transform, false);
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localPosition = Vector3.zero;
+            instance.SetActive(true); // template was disabled; the live clone should be enabled
 
             Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
-            Debug.Log($"Child was moved to {child.transform.position}");
+            //Debug.Log($"Child was moved to {child.transform.position}");
 
             anchorData.AddAnchor(image.referenceImage.name, anchor);
         }
@@ -226,14 +238,14 @@ public class ImageTargetSession : MonoBehaviour
             return;
         }
 
-        if (toRemove.transform.childCount > 0)
-        {
-            foreach (Transform child in toRemove.transform)
-            {
-                child.transform.SetParent(transform, false);
-            }
-        }
-        DeleteAnchor(toRemove);
+        //if (toRemove.transform.childCount > 0)
+        //{
+        //    foreach (Transform child in toRemove.transform)
+        //    {
+        //        child.transform.SetParent(transform, false);
+        //    }
+        //}
+        DeleteAnchor(toRemove); // this destroys the anchor AND its child together
         anchorData.RemoveAnchor(v_currentTracking);
     }
 
@@ -247,4 +259,6 @@ public class ImageTargetSession : MonoBehaviour
             return;
         }
     }
+
+    
 }

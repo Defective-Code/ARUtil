@@ -73,6 +73,6 @@ public class AnchorData : ScriptableObject
     {
         d_ImageAnchor.Clear();
         d_AprilTagAnchor.Clear();
-        AnchorsUpdated?.Invoke();
+        //AnchorsUpdated?.Invoke();
     }
 }
