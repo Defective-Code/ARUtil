@@ -26,6 +26,7 @@ public class ImageTargetSession : MonoBehaviour
 
     Slider ui_StabilizationLoading;
     Button ui_ResetAnchorButton;
+    Label ui_SessionStateLabel;
 
     //[SerializeField]
     //GameObject child;
@@ -47,6 +48,7 @@ public class ImageTargetSession : MonoBehaviour
     {
         d_Times.Clear();
         v_currentTracking = null;
+        ui_ResetAnchorButton.style.display = DisplayStyle.None; // hide the Anchor reset button as we have wiped the state and all detections
     }
 
     private void OnValidate()
@@ -122,6 +124,8 @@ public class ImageTargetSession : MonoBehaviour
     {
         aRTrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
         panelRenderer.RegisterUIReloadCallback(OnUIReload);
+
+        ARSession.stateChanged += OnSessionStateChanged;
     }
 
     void OnDisable()
@@ -131,17 +135,55 @@ public class ImageTargetSession : MonoBehaviour
 
         if (ui_ResetAnchorButton != null)
             ui_ResetAnchorButton.clicked -= ReloadAnchor;
+
+        ARSession.stateChanged -= OnSessionStateChanged;
     }
 
     void OnUIReload(PanelRenderer renderer, VisualElement rootElement, int version)
     {
         ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
         ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
+        ui_SessionStateLabel = rootElement.Q<Label>("session-label");
 
         ui_ResetAnchorButton.clicked += ReloadAnchor;
 
         // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
         ui_ResetAnchorButton.style.display = DisplayStyle.None;
+    }
+
+    void OnSessionStateChanged(ARSessionStateChangedEventArgs args)
+    {
+        if (ui_SessionStateLabel != null)
+        {
+            switch (args.state)
+            {
+                case ARSessionState.None:
+                    // Device support hasn't been determined yet
+                    break;
+                case ARSessionState.Unsupported:
+                    // Device doesn't support AR
+                    break;
+                case ARSessionState.CheckingAvailability:
+                    // Checking if AR is supported
+                    break;
+                case ARSessionState.NeedsInstall:
+                    // AR software needs to be installed (e.g. ARCore APK)
+                    break;
+                case ARSessionState.Installing:
+                    // AR software is installing
+                    break;
+                case ARSessionState.Ready:
+                    // AR is supported and ready, but session hasn't started
+                    break;
+                case ARSessionState.SessionInitializing:
+                    // Session is starting up, gathering data before tracking begins
+                    break;
+                case ARSessionState.SessionTracking:
+                    // Session is up and tracking successfully — camera feed should be live here
+                    break;
+            }
+            ui_SessionStateLabel.text = ARSession.state.ToString();
+        }
     }
 
     void OnTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
