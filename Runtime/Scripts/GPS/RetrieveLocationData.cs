@@ -8,6 +8,8 @@ public class RetrieveLocationData : MonoBehaviour
 {
     public static RetrieveLocationData Instance { set; get; }
 
+    private Coroutine locationService;
+
     public LocationData locationData; //Scriptable object for storing the position information
 
     private int counter;
@@ -26,9 +28,29 @@ public class RetrieveLocationData : MonoBehaviour
         
     }
 
-    private void Start()
+    private void OnEnable()
     {   
-        StartCoroutine(StartLocationService());
+        StartService();
+    }
+
+    private void OnDisable()
+    {
+        StopService();
+    }
+
+    public void StartService()
+    {
+        locationService = StartCoroutine(StartLocationService());
+    }
+
+    public void StopService()
+    {
+        if (locationService == null)
+        {
+            Debug.LogError("LocationService coroutine is currently not running, nothing to stop. Check the logs to make sure the coroutine has started correctly");
+        }
+
+        StopCoroutine(locationService);
     }
 
     private IEnumerator StartLocationService()
@@ -36,7 +58,7 @@ public class RetrieveLocationData : MonoBehaviour
         // First, check if user has location service enabled
         if (!Input.location.isEnabledByUser)
         {
-            Debug.Log("GPS not enabled");
+            Debug.LogError("GPS not enabled by user, please allow the use of location permission");
             yield break;
         }
 
@@ -54,14 +76,14 @@ public class RetrieveLocationData : MonoBehaviour
         // Service didn't initialize in 20 seconds
         if (maxWait <= 0)
         {
-            Debug.Log("Timed out");
+            Debug.LogError("Timed out : Service didn't start in 20 seconds");
             yield break;
         }
 
         // Connection has failed
         if (Input.location.status == LocationServiceStatus.Failed)
         {
-            Debug.Log("Unable to determine device location");
+            Debug.LogError("Unable to determine device location");
             yield break;
         }
 
