@@ -48,6 +48,7 @@ public class RetrieveLocationData : MonoBehaviour
         if (locationService == null)
         {
             Debug.LogError("LocationService coroutine is currently not running, nothing to stop. Check the logs to make sure the coroutine has started correctly");
+            return;
         }
 
         StopCoroutine(locationService);
