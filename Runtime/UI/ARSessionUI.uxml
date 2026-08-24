@@ -1,7 +1,7 @@
 <UXML xmlns="UnityEngine.UIElements" editor-extension-mode="False">
     <VisualElement name="ar-session-ui" style="flex-grow: 1; justify-content: center; position: absolute; width: 100%; height: 100%;">
-        <Button name="reset-anchor-button" text="Reset Anchor" style="position: relative; bottom: auto; left: auto; width: 150px; align-items: center; align-self: center; justify-content: flex-start;"/>
-        <Slider name="stabilization-loading" low-value="0" high-value="1" style="position: relative; bottom: auto; left: auto; right: auto; align-self: center; height: 29px; width: 256px; justify-content: flex-start;"/>
+        <Button name="reset-anchor-button" text="Reset Anchor" style="position: relative; bottom: auto; left: auto; width: 40%; align-items: center; align-self: center; justify-content: flex-start; max-width: 150px; min-width: auto;"/>
+        <Slider name="stabilization-loading" low-value="0" high-value="1" style="position: relative; bottom: auto; left: auto; right: auto; align-self: center; height: 29px; width: 70%; justify-content: flex-start; min-width: auto; max-width: 250px; min-height: auto; max-height: none;"/>
         <Label text="Session State" name="session-label" style="position: absolute; top: 11px; left: 11px; color: rgb(255, 255, 255); background-color: rgba(0, 0, 0, 0);"/>
         <Button name="toggle-panel-button" text="Toggle Panel" style="position: absolute; top: 8px; right: 8px; width: 100px; display: none;"/>
     </VisualElement>
