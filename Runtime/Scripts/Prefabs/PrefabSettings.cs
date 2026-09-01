@@ -20,7 +20,7 @@ public class PrefabSettings : MonoBehaviour
         //start the prefab child object as inactive so the user can't see it when the app loads
         //GameObject child = transform.GetChild(0).gameObject;
         //child.SetActive(false);
-        gameObject.SetActive(false);
+        //gameObject.SetActive(false);
     }
     
     // Everytime prefab is enabled we want to apply all the settings 

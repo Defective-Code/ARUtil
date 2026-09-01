@@ -21,8 +21,15 @@ public class ImageTargetSession : MonoBehaviour
     //[SerializeField]
     //GameObject debugPrefab;
 
+#if UNITY_6000_5_OR_NEWER
+    // Unity 6.5+: world-space / multi-panel UI Toolkit workflow
     [SerializeField]
-    PanelRenderer panelRenderer; // replaces direct Slider/Button references
+    PanelRenderer panelRenderer;
+#else
+    // Unity 6.3: classic UIDocument workflow
+    [SerializeField]
+    UIDocument uiDocument;
+#endif
 
     Slider ui_StabilizationLoading;
     Button ui_ResetAnchorButton;
@@ -123,7 +130,26 @@ public class ImageTargetSession : MonoBehaviour
     void OnEnable()
     {
         aRTrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
+
+#if UNITY_6000_5_OR_NEWER
         panelRenderer.RegisterUIReloadCallback(OnUIReload);
+#else
+        if (uiDocument == null)
+        {
+            Debug.LogError("UIDocument reference is missing on ImageTargetSession.");
+        }
+        else if (uiDocument.rootVisualElement == null)
+        {
+            // Rare with default script execution order, but guard against the
+            // UIDocument not having built its tree yet.
+            Debug.LogError("UIDocument.rootVisualElement was null in OnEnable. " +
+                "Check script execution order relative to UIDocument.");
+        }
+        else
+        {
+            BindUIElements(uiDocument.rootVisualElement);
+        }
+#endif
 
         ARSession.stateChanged += OnSessionStateChanged;
     }
@@ -131,7 +157,10 @@ public class ImageTargetSession : MonoBehaviour
     void OnDisable()
     {
         aRTrackedImageManager.trackablesChanged.RemoveListener(OnTrackedImagesChanged);
+
+#if UNITY_6000_5_OR_NEWER
         panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+#endif
 
         if (ui_ResetAnchorButton != null)
             ui_ResetAnchorButton.clicked -= ReloadAnchor;
@@ -139,16 +168,29 @@ public class ImageTargetSession : MonoBehaviour
         ARSession.stateChanged -= OnSessionStateChanged;
     }
 
+#if UNITY_6000_5_OR_NEWER
     void OnUIReload(PanelRenderer renderer, VisualElement rootElement, int version)
+    {
+        BindUIElements(rootElement);
+    }
+#endif
+
+    // Shared element lookup/binding used by both workflows so the query
+    // logic and button wiring only live in one place.
+    void BindUIElements(VisualElement rootElement)
     {
         ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
         ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
         ui_SessionStateLabel = rootElement.Q<Label>("session-label");
 
-        ui_ResetAnchorButton.clicked += ReloadAnchor;
+        if (ui_ResetAnchorButton != null)
+        {
+            ui_ResetAnchorButton.clicked -= ReloadAnchor; // avoid double subscription on rebind
+            ui_ResetAnchorButton.clicked += ReloadAnchor;
 
-        // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
-        ui_ResetAnchorButton.style.display = DisplayStyle.None;
+            // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
+            ui_ResetAnchorButton.style.display = DisplayStyle.None;
+        }
     }
 
     void OnSessionStateChanged(ARSessionStateChangedEventArgs args)
@@ -301,6 +343,4 @@ public class ImageTargetSession : MonoBehaviour
             return;
         }
     }
-
-    
 }
