@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "displayName": "ARUtil",
   "description": "Contains classes and other things useful to my AR Work.",
-  "unity": "6000.5",
+  "unity": "6000.3",
   "unityRelease": "0f1",
   "dependencies": {
     "com.unity.xr.arfoundation": "6.0.0",
