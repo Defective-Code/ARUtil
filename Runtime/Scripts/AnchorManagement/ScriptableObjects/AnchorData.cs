@@ -4,6 +4,7 @@ using UnityEngine.XR.ARFoundation;
 using System;
 using System.Collections.Generic;
 
+// SO to manage all anchor related functions
 [CreateAssetMenu(fileName = "AnchorData", menuName = "Scriptable Objects/AnchorData")]
 public class AnchorData : ScriptableObject
 {
@@ -24,7 +25,6 @@ public class AnchorData : ScriptableObject
 
     public event Action AnchorsUpdated; // event for when anchors changed 
 
-    // method to add an image anchor
     public void AddAnchor(string name, ARAnchor anchor)
     {
         d_ImageAnchor.Add(name, anchor);
@@ -40,15 +40,29 @@ public class AnchorData : ScriptableObject
 
     public void RemoveAnchor(string name)
     {
+        //DeleteAnchor(d_ImageAnchor[name]);
         d_ImageAnchor.Remove(name);
         AnchorsUpdated?.Invoke();
     }
 
     public void RemoveAnchor(int id)
     {
+        //DeleteAnchor(d_AprilTagAnchor[id]);
         d_AprilTagAnchor.Remove(id);
         AnchorsUpdated?.Invoke();
     }
+
+    //private void DeleteAnchor(ARAnchor toRemove)
+    //{
+    //    var result = aRAnchorManager.TryRemoveAnchor(toRemove);
+
+    //    if (!result)
+    //    {
+    //        Debug.LogError($"Failed to remove anchor");
+    //        return;
+    //    }
+    //}
+
 
     public bool ContainsKey(string name)
     {
@@ -73,6 +87,16 @@ public class AnchorData : ScriptableObject
     {
         d_ImageAnchor.Clear();
         d_AprilTagAnchor.Clear();
-        //AnchorsUpdated?.Invoke();
+        AnchorsUpdated?.Invoke();
     }
+
+    public List<string> GetKeys()
+    {
+        List<string> toReturn = new List<string>();
+        toReturn.AddRange(d_ImageAnchor.Keys);
+        //toReturn.AddRange(d_AprilTagAnchor.Keys);
+
+        return toReturn;
+    }
+
 }

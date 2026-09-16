@@ -9,8 +9,8 @@ using UnityEngine.XR.ARSubsystems;
 
 public class ImageTargetSession : MonoBehaviour
 {
-    [SerializeField]
-    ARAnchorManager aRAnchorManager;
+    //[SerializeField]
+    //ARAnchorManager aRAnchorManager;
 
     [SerializeField]
     ARTrackedImageManager aRTrackedImageManager;
@@ -44,7 +44,10 @@ public class ImageTargetSession : MonoBehaviour
     [SerializeField]
     AnchorData anchorData;
 
-    Dictionary<string, ARAnchor> d_ImageAnchor = new Dictionary<string, ARAnchor>();
+    [SerializeField]
+    ARAnchorOrganizer aRAnchorOrganizer;
+
+    //Dictionary<string, ARAnchor> d_ImageAnchor = new Dictionary<string, ARAnchor>();
     Dictionary<string, float> d_Times = new();
     Dictionary<string, GameObject> d_namesChildren = new();
 
@@ -55,7 +58,7 @@ public class ImageTargetSession : MonoBehaviour
     {
         d_Times.Clear();
         v_currentTracking = null;
-        ui_ResetAnchorButton.style.display = DisplayStyle.None; // hide the Anchor reset button as we have wiped the state and all detections
+        //ui_ResetAnchorButton.style.display = DisplayStyle.None; // hide the Anchor reset button as we have wiped the state and all detections
     }
 
     private void OnValidate()
@@ -63,10 +66,10 @@ public class ImageTargetSession : MonoBehaviour
         // unchanged — no UI Toolkit-specific logic here
         GameObject xrOrigin = GameObject.Find("XR Origin");
 
-        if (aRAnchorManager == null)
-        {
-            aRAnchorManager = xrOrigin?.GetComponent<ARAnchorManager>();
-        }
+        //if (aRAnchorManager == null)
+        //{
+        //    aRAnchorManager = xrOrigin?.GetComponent<ARAnchorManager>();
+        //}
 
         if (aRTrackedImageManager == null)
         {
@@ -162,8 +165,8 @@ public class ImageTargetSession : MonoBehaviour
         panelRenderer.UnregisterUIReloadCallback(OnUIReload);
 #endif
 
-        if (ui_ResetAnchorButton != null)
-            ui_ResetAnchorButton.clicked -= ReloadAnchor;
+        //if (ui_ResetAnchorButton != null)
+        //    ui_ResetAnchorButton.clicked -= ReloadAnchor;
 
         ARSession.stateChanged -= OnSessionStateChanged;
     }
@@ -180,17 +183,17 @@ public class ImageTargetSession : MonoBehaviour
     void BindUIElements(VisualElement rootElement)
     {
         ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
-        ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
+        //ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
         ui_SessionStateLabel = rootElement.Q<Label>("session-label");
 
-        if (ui_ResetAnchorButton != null)
-        {
-            ui_ResetAnchorButton.clicked -= ReloadAnchor; // avoid double subscription on rebind
-            ui_ResetAnchorButton.clicked += ReloadAnchor;
+        //if (ui_ResetAnchorButton != null)
+        //{
+        //    ui_ResetAnchorButton.clicked -= ReloadAnchor; // avoid double subscription on rebind
+        //    ui_ResetAnchorButton.clicked += ReloadAnchor;
 
-            // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
-            ui_ResetAnchorButton.style.display = DisplayStyle.None;
-        }
+        //    // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
+        //    ui_ResetAnchorButton.style.display = DisplayStyle.None;
+        //}
     }
 
     void OnSessionStateChanged(ARSessionStateChangedEventArgs args)
@@ -266,7 +269,7 @@ public class ImageTargetSession : MonoBehaviour
                 else
                 {
                     v_currentTracking = updatedImage.referenceImage.name;
-                    ui_ResetAnchorButton.style.display = DisplayStyle.Flex; // was .gameObject.SetActive(true)
+                    //ui_ResetAnchorButton.style.display = DisplayStyle.Flex; // was .gameObject.SetActive(true)
                 }
             }
             else
@@ -279,7 +282,7 @@ public class ImageTargetSession : MonoBehaviour
         }
     }
 
-    async void CreateImageAnchor(ARTrackedImage image, GameObject templateChild)
+    private void CreateImageAnchor(ARTrackedImage image, GameObject templateChild)
     {
         Debug.Log("Creating Image Anchor");
 
@@ -288,11 +291,31 @@ public class ImageTargetSession : MonoBehaviour
         Quaternion flatRotation = Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0);
         Pose imagePose = worldOrient ? new Pose(image.transform.position, flatRotation) : new Pose(image.transform.position, image.transform.rotation);
 
-        var result = await aRAnchorManager.TryAddAnchorAsync(imagePose);
-        if (result.status.IsSuccess())
-        {
-            var anchor = result.value;
+        //var result = await aRAnchorManager.TryAddAnchorAsync(imagePose);
+        //if (result.status.IsSuccess())
+        //{
+        //    var anchor = result.value;
 
+        //    //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
+
+        //    GameObject instance = Instantiate(templateChild, anchor.transform);
+        //    //instance.transform.SetParent(anchor.transform, false);
+        //    instance.transform.localRotation = Quaternion.identity;
+        //    instance.transform.localPosition = Vector3.zero;
+        //    instance.SetActive(true); // template was disabled; the live clone should be enabled
+
+        //    Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
+        //    //Debug.Log($"Child was moved to {child.transform.position}");
+
+        //    anchorData.AddAnchor(image.referenceImage.name, anchor);
+        //}
+        //else
+        //{
+        //    Debug.LogError($"Failed to create the anchor for tag {image.referenceImage.name} with {result.status}");
+        //}
+
+        aRAnchorOrganizer.CreateAnchor(image.referenceImage.name, image.transform.position, worldOrient ? flatRotation : image.transform.rotation, (ARAnchor anchor) =>
+        {
             //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
 
             GameObject instance = Instantiate(templateChild, anchor.transform);
@@ -303,13 +326,7 @@ public class ImageTargetSession : MonoBehaviour
 
             Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
             //Debug.Log($"Child was moved to {child.transform.position}");
-
-            anchorData.AddAnchor(image.referenceImage.name, anchor);
-        }
-        else
-        {
-            Debug.LogError($"Failed to create the anchor for tag {image.referenceImage.name} with {result.status}");
-        }
+        });
     }
 
     void ReloadAnchor()
@@ -329,18 +346,9 @@ public class ImageTargetSession : MonoBehaviour
         //        child.transform.SetParent(transform, false);
         //    }
         //}
-        DeleteAnchor(toRemove); // this destroys the anchor AND its child together
+        //DeleteAnchor(toRemove); // this destroys the anchor AND its child together
         anchorData.RemoveAnchor(v_currentTracking);
     }
 
-    void DeleteAnchor(ARAnchor toRemove)
-    {
-        var result = aRAnchorManager.TryRemoveAnchor(toRemove);
-
-        if (!result)
-        {
-            Debug.LogError($"Failed to remove anchor");
-            return;
-        }
-    }
+    
 }
