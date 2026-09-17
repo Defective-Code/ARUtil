@@ -1,0 +1,24 @@
+.view {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+
+	display: none;
+	opacity: 0;
+
+	transition-property: opacity;
+	transition-duration: 0.15s;
+	transition-timing-function: ease-out;
+}
+
+/* Present in the layout tree, but still transparent */
+.view-mounted {
+	display: flex;
+}
+
+/* Faded in */
+.view--visible {
+	opacity: 1;
+}

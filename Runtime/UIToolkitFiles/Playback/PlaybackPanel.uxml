@@ -1,0 +1,13 @@
+<UXML xmlns="UnityEngine.UIElements" editor-extension-mode="False">
+    <VisualElement name="playback-panel" style="flex-grow: 1; padding: 12px; background-color: rgba(0, 0, 0, 0.533); color: rgb(255, 255, 255); display: flex; visibility: visible;">
+        <Label name="status-label" text="No recordings found."/>
+        <Label name="selected-label" text="No file selected" style="margin-bottom: 8px;"/>
+        <ListView name="recordings-list" style="flex-grow: 1; margin-bottom: 8px;"/>
+        <VisualElement style="flex-direction: row;">
+            <Button name="play-button" text="Play" style="flex-grow: 1; margin-right: 4px;"/>
+            <Button name="stop-button" text="Stop" style="flex-grow: 1; margin-right: 4px;"/>
+            <Button name="refresh-button" text="Refresh" style="flex-grow: 1;"/>
+        </VisualElement>
+    </VisualElement>
+    <Button name="toggle-panel-button" text="Toggle Panel" style="position: absolute; top: 8px; right: 8px; width: 100px; visibility: visible; display: flex;"/>
+</UXML>

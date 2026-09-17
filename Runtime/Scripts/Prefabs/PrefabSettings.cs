@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System;
-
+using System; 
 public class PrefabSettings : MonoBehaviour
 {
 
@@ -11,23 +10,6 @@ public class PrefabSettings : MonoBehaviour
     public bool delay = false; // use this to delay the spawning of the associated prefab. This is so tracking can settle and become a bit better before spawning in the prefab
 
     public bool persistent; // toggle if the prefab spawns in a persistent manner
-
-    
-
-    void Awake()
-    {
-
-        //start the prefab child object as inactive so the user can't see it when the app loads
-        //GameObject child = transform.GetChild(0).gameObject;
-        //child.SetActive(false);
-        //gameObject.SetActive(false);
-    }
-    
-    // Everytime prefab is enabled we want to apply all the settings 
-    void OnEnable()
-    {
-        ApplySettings();
-    }
 
 
     public void UpdatePosition(Transform imageTarget)
@@ -40,18 +22,14 @@ public class PrefabSettings : MonoBehaviour
         //gameObject.SetActive(true);
     }
 
-
+    // Method to call to apply the settings set in the PrefabSettings component. 
     public void ApplySettings()
     {
+        GameObject child = transform.GetChild(0).gameObject;
+        child.SetActive(true);
 
-        //Debug.Log("Enabling");
-        //GameObject child = transform.GetChild(0).gameObject;
-        //child.SetActive(true);
-        gameObject.SetActive(true);
+        Debug.Log($"On enable {child.transform.localPosition}");
 
-        //Debug.Log($"On enable {child.transform.localPosition}");
-
-        //Debug.Log("After SetActive: " + child.activeSelf);
 
         if (fadeIn)
         {
