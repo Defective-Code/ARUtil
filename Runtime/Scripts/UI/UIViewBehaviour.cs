@@ -1,4 +1,3 @@
-using UnityEditor.AdaptivePerformance.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,7 +9,7 @@ public abstract class UIViewBehaviour : MonoBehaviour
 
     public UIScreen Id => id;
     public VisualTreeAsset Uxml => uxml;
-    public UILayer Layer = > layer;
+    public UILayer Layer => layer;
     public VisualElement Root {  get; private set; }
 
     private bool _initialized;

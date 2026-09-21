@@ -18,22 +18,19 @@ public class ImageTargetSession : MonoBehaviour
     [SerializeField]
     XRReferenceImageLibrary imagesTargets;
 
+    [SerializeField]
+    ARSessionHud aRSessionHud;
+
     //[SerializeField]
     //GameObject debugPrefab;
 
-#if UNITY_6000_5_OR_NEWER
-    // Unity 6.5+: world-space / multi-panel UI Toolkit workflow
-    [SerializeField]
-    PanelRenderer panelRenderer;
-#else
-    // Unity 6.3: classic UIDocument workflow
-    [SerializeField]
-    UIDocument uiDocument;
-#endif
+    //// Unity 6.3: classic UIDocument workflow
+    //[SerializeField]
+    //UIDocument uiDocument;
 
-    Slider ui_StabilizationLoading;
-    Button ui_ResetAnchorButton;
-    Label ui_SessionStateLabel;
+    //Slider ui_StabilizationLoading;
+    //Button ui_ResetAnchorButton;
+    //Label ui_SessionStateLabel;
 
     //[SerializeField]
     //GameObject child;
@@ -134,25 +131,21 @@ public class ImageTargetSession : MonoBehaviour
     {
         aRTrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
 
-#if UNITY_6000_5_OR_NEWER
-        panelRenderer.RegisterUIReloadCallback(OnUIReload);
-#else
-        if (uiDocument == null)
-        {
-            Debug.LogError("UIDocument reference is missing on ImageTargetSession.");
-        }
-        else if (uiDocument.rootVisualElement == null)
-        {
-            // Rare with default script execution order, but guard against the
-            // UIDocument not having built its tree yet.
-            Debug.LogError("UIDocument.rootVisualElement was null in OnEnable. " +
-                "Check script execution order relative to UIDocument.");
-        }
-        else
-        {
-            BindUIElements(uiDocument.rootVisualElement);
-        }
-#endif
+        //if (uiDocument == null)
+        //{
+        //    Debug.LogError("UIDocument reference is missing on ImageTargetSession.");
+        //}
+        //else if (uiDocument.rootVisualElement == null)
+        //{
+        //    // Rare with default script execution order, but guard against the
+        //    // UIDocument not having built its tree yet.
+        //    Debug.LogError("UIDocument.rootVisualElement was null in OnEnable. " +
+        //        "Check script execution order relative to UIDocument.");
+        //}
+        //else
+        //{
+        //    BindUIElements(uiDocument.rootVisualElement);
+        //}
 
         ARSession.stateChanged += OnSessionStateChanged;
     }
@@ -161,9 +154,6 @@ public class ImageTargetSession : MonoBehaviour
     {
         aRTrackedImageManager.trackablesChanged.RemoveListener(OnTrackedImagesChanged);
 
-#if UNITY_6000_5_OR_NEWER
-        panelRenderer.UnregisterUIReloadCallback(OnUIReload);
-#endif
 
         //if (ui_ResetAnchorButton != null)
         //    ui_ResetAnchorButton.clicked -= ReloadAnchor;
@@ -171,64 +161,60 @@ public class ImageTargetSession : MonoBehaviour
         ARSession.stateChanged -= OnSessionStateChanged;
     }
 
-#if UNITY_6000_5_OR_NEWER
-    void OnUIReload(PanelRenderer renderer, VisualElement rootElement, int version)
-    {
-        BindUIElements(rootElement);
-    }
-#endif
 
-    // Shared element lookup/binding used by both workflows so the query
-    // logic and button wiring only live in one place.
-    void BindUIElements(VisualElement rootElement)
-    {
-        ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
-        //ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
-        ui_SessionStateLabel = rootElement.Q<Label>("session-label");
+    //// Shared element lookup/binding used by both workflows so the query
+    //// logic and button wiring only live in one place.
+    //void BindUIElements(VisualElement rootElement)
+    //{
+    //    ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
+    //    //ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
+    //    ui_SessionStateLabel = rootElement.Q<Label>("session-label");
 
-        //if (ui_ResetAnchorButton != null)
-        //{
-        //    ui_ResetAnchorButton.clicked -= ReloadAnchor; // avoid double subscription on rebind
-        //    ui_ResetAnchorButton.clicked += ReloadAnchor;
+    //    //if (ui_ResetAnchorButton != null)
+    //    //{
+    //    //    ui_ResetAnchorButton.clicked -= ReloadAnchor; // avoid double subscription on rebind
+    //    //    ui_ResetAnchorButton.clicked += ReloadAnchor;
 
-        //    // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
-        //    ui_ResetAnchorButton.style.display = DisplayStyle.None;
-        //}
-    }
+    //    //    // equivalent of ui_ResetAnchorButton.gameObject.SetActive(false)
+    //    //    ui_ResetAnchorButton.style.display = DisplayStyle.None;
+    //    //}
+    //}
 
     void OnSessionStateChanged(ARSessionStateChangedEventArgs args)
     {
-        if (ui_SessionStateLabel != null)
-        {
-            switch (args.state)
-            {
-                case ARSessionState.None:
-                    // Device support hasn't been determined yet
-                    break;
-                case ARSessionState.Unsupported:
-                    // Device doesn't support AR
-                    break;
-                case ARSessionState.CheckingAvailability:
-                    // Checking if AR is supported
-                    break;
-                case ARSessionState.NeedsInstall:
-                    // AR software needs to be installed (e.g. ARCore APK)
-                    break;
-                case ARSessionState.Installing:
-                    // AR software is installing
-                    break;
-                case ARSessionState.Ready:
-                    // AR is supported and ready, but session hasn't started
-                    break;
-                case ARSessionState.SessionInitializing:
-                    // Session is starting up, gathering data before tracking begins
-                    break;
-                case ARSessionState.SessionTracking:
-                    // Session is up and tracking successfully — camera feed should be live here
-                    break;
-            }
-            ui_SessionStateLabel.text = ARSession.state.ToString();
-        }
+        //if (ui_SessionStateLabel != null)
+        //{
+        //    switch (args.state)
+        //    {
+        //        case ARSessionState.None:
+        //            // Device support hasn't been determined yet
+        //            break;
+        //        case ARSessionState.Unsupported:
+        //            // Device doesn't support AR
+        //            break;
+        //        case ARSessionState.CheckingAvailability:
+        //            // Checking if AR is supported
+        //            break;
+        //        case ARSessionState.NeedsInstall:
+        //            // AR software needs to be installed (e.g. ARCore APK)
+        //            break;
+        //        case ARSessionState.Installing:
+        //            // AR software is installing
+        //            break;
+        //        case ARSessionState.Ready:
+        //            // AR is supported and ready, but session hasn't started
+        //            break;
+        //        case ARSessionState.SessionInitializing:
+        //            // Session is starting up, gathering data before tracking begins
+        //            break;
+        //        case ARSessionState.SessionTracking:
+        //            // Session is up and tracking successfully — camera feed should be live here
+        //            break;
+        //    }
+        //    ui_SessionStateLabel.text = ARSession.state.ToString();
+        //}
+
+        aRSessionHud.UpdateLabel(ARSession.state.ToString());
     }
 
     void OnTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
@@ -256,13 +242,14 @@ public class ImageTargetSession : MonoBehaviour
                         if (d_Times[imageName] >= se_timeToTrack)
                         {
                             d_Times[imageName] = 0f;
-                            ui_StabilizationLoading.value = 0f;
+                            //ui_StabilizationLoading.value = 0f;
+                            aRSessionHud.UpdateSliderValue(0f);
                             CreateImageAnchor(updatedImage, d_namesChildren[updatedImage.referenceImage.name]);
                         }
                         else
                         {
                             d_Times[imageName] += Time.deltaTime;
-                            ui_StabilizationLoading.value = d_Times[imageName] / se_timeToTrack;
+                            aRSessionHud.UpdateSliderValue(d_Times[imageName] / se_timeToTrack);
                         }
                     }
                 }

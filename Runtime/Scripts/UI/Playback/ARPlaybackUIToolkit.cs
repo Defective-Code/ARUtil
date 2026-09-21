@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 // Class to manage the UI elements and perform the relevant actions (when playback button pressed playback the relevant scene etc)
-public partial class ARPlaybackUIToolkit : MonoBehaviour
+//public partial class ARPlaybackUIToolkit : MonoBehaviour
+public class ARPlaybackUIToolkit : UIViewBehaviour
 {
     [SerializeField] private ArPlayback arPlayback;
     //public UnityEngine.UI.Button toggleButton;
@@ -23,63 +24,67 @@ public partial class ARPlaybackUIToolkit : MonoBehaviour
     private List<string> fileNames = new List<string>();
     private string selectedFile;
 
-    //private void Awake()
-    //{
-    //    panelRenderer = GetComponent<PanelRenderer>();
-    //}
+    protected override void OnInitialize()
+    {
+        // UIDocument's rootVisualElement is available immediately once the document
+        // is active, so we bind once here instead of using a reload callback.
+        BindUI(Root);
+    }
 
-    //private void OnEnable()
-    //{
-    //    panelRenderer.RegisterUIReloadCallback(OnUIReload);
-    //}
+    public override void OnEnter()
+    {
+        RefreshList();
+    }
 
     //private void OnDisable()
     //{
-    //    panelRenderer.UnregisterUIReloadCallback(OnUIReload);
-
     //    if (recordingsList != null)
     //        recordingsList.selectionChanged -= OnSelectionChanged;
     //    if (playButton != null) playButton.clicked -= OnPlayPressed;
     //    if (stopButton != null) stopButton.clicked -= OnStopPressed;
     //    if (refreshButton != null) refreshButton.clicked -= RefreshList;
+
+    //    var toggleButton = uiDocument.rootVisualElement?.Q<Button>("toggle-panel-button");
+    //    if (toggleButton != null) toggleButton.clicked -= TogglePanel;
     //}
 
-    // Called once the visual tree from the assigned UXML is built and attached
-    //private void OnUIReload(PanelRenderer renderer, VisualElement root)
-    //{
-    //    //var rootVisualElement = root.Q<VisualElement>("root-container");
-    //    root.pickingMode = PickingMode.Ignore; // disable picking up pointer events on the root visual element so we only capture events we want to capture
-        
-    //    var toggleButton = root.Q<Button>("toggle-panel-button");
-    //    toggleButton.pickingMode = PickingMode.Position;
-    //    toggleButton.clicked += TogglePanel;
+    // Called once after the UIDocument's visual tree is built and attached
+    private void BindUI(VisualElement root)
+    {
+        //var rootVisualElement = root.Q<VisualElement>("root-container");
+        root.pickingMode = PickingMode.Ignore; // disable picking up pointer events on the root visual element so we only capture events we want to capture
 
-    //    playbackPanel = root.Q<VisualElement>("playback-panel");
-    //    playbackPanel.pickingMode = PickingMode.Position; // enable picking up pointer events on this parent VisualElement so the buttons work correctly.
+        var toggleButton = root.Q<Button>("toggle-panel-button");
+        toggleButton.pickingMode = PickingMode.Position;
+        //toggleButton.clicked += TogglePanel;
+        toggleButton.text = "Close";
+        toggleButton.clicked += ClosePanel;
 
-    //    recordingsList = root.Q<ListView>("recordings-list");
-    //    statusLabel = root.Q<Label>("status-label");
-    //    selectedLabel = root.Q<Label>("selected-label");
-    //    playButton = root.Q<Button>("play-button");
-    //    stopButton = root.Q<Button>("stop-button");
-    //    refreshButton = root.Q<Button>("refresh-button");
+        playbackPanel = root.Q<VisualElement>("playback-panel");
+        playbackPanel.pickingMode = PickingMode.Position; // enable picking up pointer events on this parent VisualElement so the buttons work correctly.
 
-    //    recordingsList.makeItem = () => new Label();
-    //    recordingsList.bindItem = (element, i) => (element as Label).text = fileNames[i];
-    //    recordingsList.fixedItemHeight = 32;
-    //    recordingsList.selectionType = SelectionType.Single;
-    //    recordingsList.itemsSource = fileNames;
-    //    recordingsList.selectionChanged += OnSelectionChanged;
+        recordingsList = root.Q<ListView>("recordings-list");
+        statusLabel = root.Q<Label>("status-label");
+        selectedLabel = root.Q<Label>("selected-label");
+        playButton = root.Q<Button>("play-button");
+        stopButton = root.Q<Button>("stop-button");
+        refreshButton = root.Q<Button>("refresh-button");
 
-    //    playButton.clicked += OnPlayPressed;
-    //    stopButton.clicked += OnStopPressed;
-    //    refreshButton.clicked += RefreshList;
+        recordingsList.makeItem = () => new Label();
+        recordingsList.bindItem = (element, i) => (element as Label).text = fileNames[i];
+        recordingsList.fixedItemHeight = 32;
+        recordingsList.selectionType = SelectionType.Single;
+        recordingsList.itemsSource = fileNames;
+        recordingsList.selectionChanged += OnSelectionChanged;
 
-    //    playButton.SetEnabled(false);
+        playButton.clicked += OnPlayPressed;
+        stopButton.clicked += OnStopPressed;
+        refreshButton.clicked += RefreshList;
 
-    //    RefreshList();
-    //}
+        playButton.SetEnabled(false);
 
+        //RefreshList();
+    }
     private void RefreshList()
     {
         fileNames.Clear();
@@ -127,6 +132,11 @@ public partial class ARPlaybackUIToolkit : MonoBehaviour
         isVisible = !isVisible;
         playbackPanel.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
         //playbackPanelRenderer.enabled = isVisible;
+    }
+
+    void ClosePanel()
+    {
+        UIManager.Instance.Pop();
     }
 
     void ToggleUIRenderer()

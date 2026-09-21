@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 
 using System.Collections.Generic;
 
-[RequireComponent(typeof(UIDocument))]
-public class ARAnchorUIController : MonoBehaviour
+//[RequireComponent(typeof(UIDocument))]
+public class ARAnchorUIController : UIViewBehaviour
 {
     [SerializeField] AnchorData anchorData;
     [SerializeField] ARAnchorOrganizer aRAnchorOrganizer;
@@ -19,15 +19,16 @@ public class ARAnchorUIController : MonoBehaviour
     private List<string> anchorTargetNames = new List<string>();
     private bool visible = false;
 
-    void OnEnable()
+    //void OnEnable()
+    protected override void OnInitialize()
     {
-        uiDocument = GetComponent<UIDocument>();
+        //uiDocument = GetComponent<UIDocument>();
 
-        if (uiDocument == null)
-        {
-            Debug.LogError("ARTargetsUIController - UI Document was null");
-            return;
-        }
+        //if (uiDocument == null)
+        //{
+        //    Debug.LogError("ARTargetsUIController - UI Document was null");
+        //    return;
+        //}
 
         if (anchorData == null)
         {
@@ -37,13 +38,14 @@ public class ARAnchorUIController : MonoBehaviour
         
         //anchorData.AnchorsUpdated += RefreshList; // listen to whenever anchors are updated - automatically keep the list in sync with these changes
 
-        BindUI(uiDocument.rootVisualElement);
+        BindUI(Root);
 
         anchorData.AnchorsUpdated += UpdateAnchorList;
 
     }
 
-    private void OnDisable()
+    //private void OnDisable()
+    public override void OnExit()
     {
         anchorData.AnchorsUpdated -= UpdateAnchorList;
         //anchorData.AnchorsUpdated -= RefreshList;
@@ -53,13 +55,13 @@ public class ARAnchorUIController : MonoBehaviour
     {
         root.pickingMode = PickingMode.Ignore;
 
-        var uiPanel = root.Q<VisualElement>("ar-session-ui");
+        //var uiPanel = root.Q<VisualElement>("ar-session-ui");
         anchorPanel = root.Q<VisualElement>("anchor-panel");
         anchorsList = root.Q<ListView>("anchor-list");
         anchorClearButton = root.Q<Button>("anchor-clear-button");
         anchorPanelButton = root.Q<Button>("anchor-panel-button");
 
-        uiPanel.pickingMode = PickingMode.Ignore;
+        //uiPanel.pickingMode = PickingMode.Ignore;
         anchorPanel.pickingMode = PickingMode.Ignore;
 
         root.RegisterCallback<PointerDownEvent>(evt =>
@@ -91,7 +93,8 @@ public class ARAnchorUIController : MonoBehaviour
         anchorPanelButton.clicked += () => {
             //Debug.Log("Toggle Anchor Panel!");
             visible = !visible;
-            anchorPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            //anchorPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            UIManager.Instance.Pop();
         };
 
         anchorClearButton.pickingMode = PickingMode.Position;

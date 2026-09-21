@@ -14,6 +14,10 @@ public class ArPlayback : MonoBehaviour
     [SerializeField] private ARSession arSession;
     [SerializeField] private ARPlaybackManager playbackManager;
     [SerializeField] private GPSPlayback gpsPlayback;
+    [SerializeField] private ARAnchorOrganizer anchorOrganizer;
+
+    // Here add references to each targeting type you added.
+    [SerializeField] private ImageTargetSession imageTargetSession;
      
     private bool playingBack;
     private ARCoreSessionSubsystem subsystem;
@@ -147,9 +151,12 @@ public class ArPlayback : MonoBehaviour
         ClearSessionState();
     }
 
+    // method to clear all the data that was created during the playback
     private void ClearSessionState()
     {
         arSession.Reset();
-        SessionReset?.Invoke();
+        //SessionReset?.Invoke();
+        anchorOrganizer.ClearAnchors(); // 
+        imageTargetSession.ClearData();
     }
 }

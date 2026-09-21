@@ -44,4 +44,13 @@ public class ARAnchorOrganizer : MonoBehaviour
             return;
         }
     }
+
+    // Loop over all the anchors and remove them
+    public void ClearAnchors()
+    {
+        foreach (var key in anchorData.GetKeys())
+        {
+            RemoveAnchor(key);
+        }
+    }
 }

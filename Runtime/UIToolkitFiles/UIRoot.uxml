@@ -1,6 +1,8 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI%20Toolkit/Views.uss?fileID=7433441132597879392&amp;guid=ed5f1a7d925e58541a5ff98bf0e95575&amp;type=3#Views"/>
+    <Style src="project://database/Assets/UI%20Toolkit/Views%201.uss?fileID=7433441132597879392&amp;guid=ad998acbd9ecb404486a3c23092ac347&amp;type=3#Views 1"/>
     <ui:VisualElement name="safe-area" style="flex-grow: 1;">
-        <ui:VisualElement name="view-container" style="flex-grow: 1;"/>
+        <ui:VisualElement name="hud-layer" picking-mode="Ignore" style="flex-grow: 1; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 255, 0, 0);"/>
+        <ui:VisualElement name="view-container" picking-mode="Ignore" style="flex-grow: 1; -unity-background-image-tint-color: rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0);"/>
+        <ui:VisualElement name="overlay-layer" picking-mode="Ignore" style="flex-grow: 1; position: absolute; top: 0; left: 0; right: 0; bottom: 0; -unity-background-image-tint-color: rgb(0, 0, 255); background-color: rgba(0, 0, 255, 0);"/>
     </ui:VisualElement>
 </ui:UXML>

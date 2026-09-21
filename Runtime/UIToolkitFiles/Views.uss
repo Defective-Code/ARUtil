@@ -14,7 +14,7 @@
 }
 
 /* Present in the layout tree, but still transparent */
-.view-mounted {
+.view--mounted {
 	display: flex;
 }
 
