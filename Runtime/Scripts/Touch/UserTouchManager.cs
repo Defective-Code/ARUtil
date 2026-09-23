@@ -10,11 +10,19 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 // class that handles all user touch interactions with specified 3d objects (3d objects with the ... class)
 public class UserTouchManager : MonoBehaviour
 {
-    
+
+    public static UserTouchManager Instance { get; private set; }
+
     // The list of objects to be touchable
     public List<TouchObject> interactableObjects = new List<TouchObject>();
 
     private Dictionary<string, TouchObject> d_namesToInterface = new Dictionary<string, TouchObject>();
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+    }
 
     void OnEnable()
     {
@@ -58,7 +66,7 @@ public class UserTouchManager : MonoBehaviour
 
             var activeTouch = activeTouches[0];
 
-            Debug.Log("Touch was detected");
+            //Debug.Log("Touch was detected");
 
             Ray raycast = Camera.main.ScreenPointToRay(activeTouch.screenPosition);
             RaycastHit raycastHit;
@@ -88,5 +96,22 @@ public class UserTouchManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    // UserTouchManager.cs
+    public void RegisterInteractable(TouchObject touchObject)
+    {
+        if (touchObject == null) return;
+
+        interactableObjects.Add(touchObject);
+        d_namesToInterface[touchObject.gameObject.name] = touchObject; // overwrite is fine/expected
+    }
+
+    public void UnregisterInteractable(TouchObject touchObject)
+    {
+        if (touchObject == null) return;
+
+        interactableObjects.Remove(touchObject);
+        d_namesToInterface.Remove(touchObject.gameObject.name);
     }
 }

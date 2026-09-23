@@ -227,19 +227,19 @@ public class ImageTargetSession : MonoBehaviour
             {
                 if (!anchorData.ContainsKey(imageName))
                 {
-                    if (!d_Times.ContainsKey(imageName))
+                    if (!d_Times.ContainsKey(imageName)) // if we dont have an entry for storing the time of tracking for a given image, then create one.
                     {
                         v_currentTracking = imageName;
                         d_Times.Add(imageName, 0f);
                     }
-                    else if (v_currentTracking != imageName)
+                    else if (v_currentTracking != imageName) // if the image we are now tracking is not what was last tracked and we have already created a timer reocrding for this before, then update the latest tracked image to this one and set the timer back to 0
                     {
                         v_currentTracking = imageName;
                         d_Times[imageName] = 0f;
                     }
-                    else
+                    else 
                     {
-                        if (d_Times[imageName] >= se_timeToTrack)
+                        if (d_Times[imageName] >= se_timeToTrack) // if we have tracked a given image for the min amount of time, then create an achor for that image
                         {
                             d_Times[imageName] = 0f;
                             //ui_StabilizationLoading.value = 0f;
@@ -255,7 +255,7 @@ public class ImageTargetSession : MonoBehaviour
                 }
                 else
                 {
-                    v_currentTracking = updatedImage.referenceImage.name;
+                    v_currentTracking = imageName;
                     //ui_ResetAnchorButton.style.display = DisplayStyle.Flex; // was .gameObject.SetActive(true)
                 }
             }

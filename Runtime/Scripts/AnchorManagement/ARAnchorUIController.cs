@@ -45,11 +45,11 @@ public class ARAnchorUIController : UIViewBehaviour
     }
 
     //private void OnDisable()
-    public override void OnExit()
-    {
-        anchorData.AnchorsUpdated -= UpdateAnchorList;
-        //anchorData.AnchorsUpdated -= RefreshList;
-    }
+    //public override void OnExit()
+    //{
+    //    anchorData.AnchorsUpdated -= UpdateAnchorList;
+    //    //anchorData.AnchorsUpdated -= RefreshList;
+    //}
 
     private void BindUI(VisualElement root)
     {
@@ -104,7 +104,8 @@ public class ARAnchorUIController : UIViewBehaviour
             {
                 aRAnchorOrganizer.RemoveAnchor(target);
             }
-            RefreshList();
+            //UpdateAnchorList();
+            //RefreshList();
         };
     }
 
@@ -124,11 +125,6 @@ public class ARAnchorUIController : UIViewBehaviour
         RefreshList(); //  pull the latest version of the stored anchor targets
     }
 
-    private void PopulateAnchorList()
-    {
-
-    }
-
     private void RefreshList()
     {
         anchorTargetNames.Clear();
@@ -138,8 +134,8 @@ public class ARAnchorUIController : UIViewBehaviour
 
     private void RemoveAnchor(string key)
     {
-        anchorData.RemoveAnchor(key); // remove the anchor from the AnchorData SO and the AnchorMAnager AR component
-        RefreshList(); // refresh the list of anchors and their names to sync with now deleted one.
+        aRAnchorOrganizer.RemoveAnchor(key); // remove the anchor from the AnchorData SO and the AnchorMAnager AR component
+        //RefreshList(); // refresh the list of anchors and their names to sync with now deleted one.
     }
 
     public class AnchorInfoVisualElement : VisualElement
@@ -149,13 +145,13 @@ public class ARAnchorUIController : UIViewBehaviour
             var root = new VisualElement();
             root.style.flexDirection = FlexDirection.Row;
             root.style.justifyContent = Justify.SpaceBetween;
+            root.style.backgroundColor = Color.red;
 
             var anchorNameLabel = new Label() { name = "anchor-name-label" };
             anchorNameLabel.style.flexGrow = 1;
 
             var anchorRemoveButton = new Button() { name = "anchor-remove-button" };
             
-
             root.Add(anchorNameLabel);
             root.Add(anchorRemoveButton);
             Add(root);

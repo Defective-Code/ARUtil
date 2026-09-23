@@ -25,9 +25,12 @@ public class AnchorData : ScriptableObject
 
     public event Action AnchorsUpdated; // event for when anchors changed 
 
+    [SerializeField] private bool debug;
+
     public void AddAnchor(string name, ARAnchor anchor)
     {
         d_ImageAnchor.Add(name, anchor);
+        if (debug) Debug.Log("AnchorsUpdated was invoked by : AddAnchor");
         AnchorsUpdated?.Invoke();
     }
 
@@ -35,6 +38,7 @@ public class AnchorData : ScriptableObject
     public void AddAnchor(int id, ARAnchor anchor)
     {
         d_AprilTagAnchor.Add(id, anchor);
+        if (debug) Debug.Log("AnchorsUpdated was invoked by : AddAnchor");
         AnchorsUpdated?.Invoke();
     }
 
@@ -42,6 +46,7 @@ public class AnchorData : ScriptableObject
     {
         //DeleteAnchor(d_ImageAnchor[name]);
         d_ImageAnchor.Remove(name);
+        if (debug) Debug.Log("AnchorsUpdated was invoked by : RemoveAnchor");
         AnchorsUpdated?.Invoke();
     }
 
@@ -49,6 +54,7 @@ public class AnchorData : ScriptableObject
     {
         //DeleteAnchor(d_AprilTagAnchor[id]);
         d_AprilTagAnchor.Remove(id);
+        if (debug) Debug.Log("AnchorsUpdated was invoked by : RemoveAnchor");
         AnchorsUpdated?.Invoke();
     }
 
@@ -87,6 +93,7 @@ public class AnchorData : ScriptableObject
     {
         d_ImageAnchor.Clear();
         d_AprilTagAnchor.Clear();
+        if (debug) Debug.Log("AnchorsUpdated was invoked by : ResetAnchors");
         AnchorsUpdated?.Invoke();
     }
 
@@ -98,5 +105,6 @@ public class AnchorData : ScriptableObject
 
         return toReturn;
     }
+
 
 }

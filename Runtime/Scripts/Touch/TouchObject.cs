@@ -8,8 +8,10 @@ public class TouchObject : MonoBehaviour
     //public Action OnTouch;
     public UnityEvent OnTouch;
 
-    private void Start()
+    private void Awake()
     {
+        UserTouchManager.Instance.RegisterInteractable(this);
+
         if (OnTouch == null)
         {
             Debug.LogWarning($"OnTouch was null for {gameObject.name}");

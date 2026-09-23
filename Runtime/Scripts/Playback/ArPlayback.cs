@@ -154,9 +154,10 @@ public class ArPlayback : MonoBehaviour
     // method to clear all the data that was created during the playback
     private void ClearSessionState()
     {
-        arSession.Reset();
-        //SessionReset?.Invoke();
         anchorOrganizer.ClearAnchors(); // 
         imageTargetSession.ClearData();
+        arSession.Reset();
+        //SessionReset?.Invoke();
+        
     }
 }

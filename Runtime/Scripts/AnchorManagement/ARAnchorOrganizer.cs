@@ -30,24 +30,27 @@ public class ARAnchorOrganizer : MonoBehaviour
 
     public void RemoveAnchor(string key)
     {
-        DeleteAnchor(anchorData.Get(key));
-        anchorData.RemoveAnchor(key);
+        if (DeleteAnchor(anchorData.Get(key)))
+        {
+            anchorData.RemoveAnchor(key);
+        } 
+        else
+        {
+            Debug.LogError($"Failed to remove anchor for key : {key}");
+        }
     }
 
-    private void DeleteAnchor(ARAnchor toRemove)
+    private bool DeleteAnchor(ARAnchor toRemove)
     {
         var result = aRAnchorManager.TryRemoveAnchor(toRemove);
 
-        if (!result)
-        {
-            Debug.LogError($"Failed to remove anchor");
-            return;
-        }
+        return result;
     }
 
     // Loop over all the anchors and remove them
     public void ClearAnchors()
     {
+        Debug.Log("Calling clear anchors");
         foreach (var key in anchorData.GetKeys())
         {
             RemoveAnchor(key);
