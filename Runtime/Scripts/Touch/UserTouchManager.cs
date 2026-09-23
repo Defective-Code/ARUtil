@@ -16,6 +16,8 @@ public class UserTouchManager : MonoBehaviour
     // The list of objects to be touchable
     public List<TouchObject> interactableObjects = new List<TouchObject>();
 
+    public bool debug;
+
     private Dictionary<string, TouchObject> d_namesToInterface = new Dictionary<string, TouchObject>();
 
     private void Awake()
@@ -50,6 +52,13 @@ public class UserTouchManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (debug)
+        {
+            foreach(string t in d_namesToInterface.Keys)
+            {
+                Debug.Log(t);
+            }
+        }
 
         // if we have added no interactable objects then don't bother doing the raycast checks
         if (d_namesToInterface.Count <= 0)
