@@ -52,9 +52,9 @@ public class UserTouchManager : MonoBehaviour
     {
 
         // if we have added no interactable objects then don't bother doing the raycast checks
-        if (interactableObjects.Count <= 0)
+        if (d_namesToInterface.Count <= 0)
         {
-            Debug.LogWarning("Interactable objects didn't have any objects in it");
+            Debug.LogWarning("Names To Interface was empty - We have not registered any objects to be interactable in the dictionary");
             return;
         }
 
