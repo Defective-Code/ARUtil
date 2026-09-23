@@ -70,7 +70,7 @@ public class UIManager : MonoBehaviour
             //root.AddToClassList("view--mounted");
             //root.AddToClassList("view--visible");
             SetMounted(root, true);
-            setVisible(root, true);
+            SetVisible(root, true);
         }
     }
 
