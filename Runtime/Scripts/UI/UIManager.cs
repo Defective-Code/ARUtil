@@ -57,7 +57,8 @@ public class UIManager : MonoBehaviour
         };
 
         var root = new VisualElement { name = view.Id.ToString() };
-        root.style.position = Position.Absolute;
+        //root.style.position = Position.Absolute;
+        ApplyBaseViewStyle(root);
         view.Uxml.CloneTree(root);
         parent.Add(root);
 
@@ -66,8 +67,10 @@ public class UIManager : MonoBehaviour
         // By default make it so the Hud is visible
         if (view.Layer == UILayer.Hud)
         {
-            root.AddToClassList("view--mounted");
-            root.AddToClassList("view--visible");
+            //root.AddToClassList("view--mounted");
+            //root.AddToClassList("view--visible");
+            SetMounted(root, true);
+            setVisible(root, true);
         }
     }
 
@@ -221,9 +224,11 @@ public class UIManager : MonoBehaviour
         view.Root.pickingMode = PickingMode.Position;
         view.OnEnter();
 
-        view.Root.AddToClassList("view--mounted");
+        //view.Root.AddToClassList("view--mounted");
+        SetMounted(view.Root, true);
         yield return null;
-        view.Root.AddToClassList("view--visible");
+        //view.Root.AddToClassList("view--visible");
+        SetVisible(view.Root, true);
         yield return new WaitForSecondsRealtime(transitionDuration);
 
         Debug.Log($"PRINTING classes attached to view.Root element");
@@ -236,9 +241,37 @@ public class UIManager : MonoBehaviour
     private IEnumerator HideView(UIViewBehaviour view)
     {
         view.Root.pickingMode = PickingMode.Ignore;
-        view.Root.RemoveFromClassList("view--visible");
+        //view.Root.RemoveFromClassList("view--visible");
+        SetVisible(view.Root, false);
         yield return new WaitForSecondsRealtime(transitionDuration);
-        view.Root.RemoveFromClassList("view--mounted");
+        //view.Root.RemoveFromClassList("view--mounted");
+        SetMounted(view.Root, false);
         view.OnExit();
     }
+
+    // .view (base state) — apply once, at mount time
+    private void ApplyBaseViewStyle(VisualElement root)
+    {
+        root.style.position = Position.Absolute;
+        root.style.left = 0;
+        root.style.top = 0;
+        root.style.right = 0;
+        root.style.bottom = 0;
+
+        root.style.display = DisplayStyle.None;
+        root.style.opacity = 0f;
+
+        // transition-property: opacity; transition-duration: 0.15s; transition-timing-function: ease-out;
+        root.style.transitionProperty = new List<StylePropertyName> { new StylePropertyName("opacity") };
+        root.style.transitionDuration = new List<TimeValue> { new TimeValue(transitionDuration, TimeUnit.Second) };
+        root.style.transitionTimingFunction = new List<EasingFunction> { new EasingFunction(EasingMode.EaseOut) };
+    }
+
+    // .view--mounted
+    private void SetMounted(VisualElement root, bool mounted)
+        => root.style.display = mounted ? DisplayStyle.Flex : DisplayStyle.None;
+
+    // .view--visible
+    private void SetVisible(VisualElement root, bool visible)
+        => root.style.opacity = visible ? 1f : 0f;
 }
