@@ -1,0 +1,11 @@
+<UXML xmlns="UnityEngine.UIElements" editor-extension-mode="False">
+    <VisualElement name="ar-session-ui" style="flex-grow: 1; justify-content: center; position: absolute; width: 100%; height: 100%; top: 0; left: 1px;">
+        <Slider name="stabilization-loading" low-value="0" high-value="1" style="position: relative; bottom: auto; left: auto; right: auto; align-self: center; height: 29px; width: 70%; justify-content: flex-start; min-width: auto; max-width: 250px; min-height: auto; max-height: none;"/>
+        <Label text="Session State" name="session-label" style="position: absolute; top: 11px; left: 11px; color: rgb(255, 255, 255); background-color: rgba(0, 0, 0, 0);"/>
+        <Button text="Open" name="ar-toggle-dropdown" style="position: absolute; top: 0; right: 0;"/>
+        <VisualElement name="ar-menu-dropdown" style="flex-grow: 1; width: 200px; height: 203px; max-height: none; position: absolute; top: 51px; left: auto; background-color: rgb(109, 109, 109); margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px; justify-content: space-evenly; display: none; right: 15px;">
+            <Button text="Anchor Menu" name="anchor-menu-button"/>
+            <Button text="Playback Menu" name="playback-menu-button"/>
+        </VisualElement>
+    </VisualElement>
+</UXML>
