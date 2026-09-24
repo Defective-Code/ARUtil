@@ -14,7 +14,7 @@ public class UserTouchManager : MonoBehaviour
     public static UserTouchManager Instance { get; private set; }
 
     // The list of objects to be touchable
-    public List<TouchObject> interactableObjects = new List<TouchObject>();
+    //public List<TouchObject> interactableObjects = new List<TouchObject>();
 
     public bool debug;
 
@@ -30,18 +30,18 @@ public class UserTouchManager : MonoBehaviour
     {
         UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable();
 
-        if (interactableObjects.Count <= 0)
-        {
-            Debug.LogWarning("Interactable objects didn't have any objects in it");
-            return;
-        }
+        //if (interactableObjects.Count <= 0)
+        //{
+        //    Debug.LogWarning("Interactable objects didn't have any objects in it");
+        //    return;
+        //}
 
-        d_namesToInterface.Clear();
-        // populate the lookup for interactable objects
-        foreach(var t in interactableObjects)
-        {
-            d_namesToInterface.Add(t.gameObject.name, t);
-        }
+        //d_namesToInterface.Clear();
+        //// populate the lookup for interactable objects
+        //foreach(var t in interactableObjects)
+        //{
+        //    d_namesToInterface.Add(t.gameObject.name, t);
+        //}
     }
 
     void OnDisable()
@@ -63,7 +63,7 @@ public class UserTouchManager : MonoBehaviour
         // if we have added no interactable objects then don't bother doing the raycast checks
         if (d_namesToInterface.Count <= 0)
         {
-            Debug.LogWarning("Names To Interface was empty - We have not registered any objects to be interactable in the dictionary");
+            if (debug) Debug.LogWarning("Names To Interface was empty - We have not registered any objects to be interactable in the dictionary");
             return;
         }
 
@@ -96,7 +96,7 @@ public class UserTouchManager : MonoBehaviour
                 //if (namesToObjects.GetCount() > 0 && namesToObjects.ContainsKey(hitObject) && namesToObjects.GetValue(hitObject) != null) {\\
 
                 // check that the list of interactable gameobjects is not empty so the user has something to interact with
-                Debug.Log($"{interactableObjects.Count} interactable objects");
+                //Debug.Log($"{interactableObjects.Count} interactable objects");
 
                 if (d_namesToInterface.TryGetValue(hitObject.name, out TouchObject to))
                 {
@@ -112,7 +112,7 @@ public class UserTouchManager : MonoBehaviour
     {
         if (touchObject == null) return;
 
-        interactableObjects.Add(touchObject);
+        //interactableObjects.Add(touchObject);
         d_namesToInterface[touchObject.gameObject.name] = touchObject; // overwrite is fine/expected
     }
 
@@ -120,7 +120,7 @@ public class UserTouchManager : MonoBehaviour
     {
         if (touchObject == null) return;
 
-        interactableObjects.Remove(touchObject);
+        //interactableObjects.Remove(touchObject);
         d_namesToInterface.Remove(touchObject.gameObject.name);
     }
 }

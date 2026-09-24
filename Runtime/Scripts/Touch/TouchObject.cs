@@ -10,6 +10,11 @@ public class TouchObject : MonoBehaviour
 
     private void Awake()
     {
+        if (UserTouchManager.Instance == null)
+        {
+            Debug.LogError($"{gameObject.name}: UserTouchManager.Instance was null on registration!");
+            return;
+        }
         UserTouchManager.Instance.RegisterInteractable(this);
 
         if (OnTouch == null)
