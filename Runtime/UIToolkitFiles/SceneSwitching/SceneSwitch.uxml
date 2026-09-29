@@ -1,0 +1,5 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="switch-panel" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.73); justify-content: center; align-self: auto; align-content: flex-start;">
+        <ui:Slider label="Slider" value="42" high-value="100" name="loading-bar" style="align-self: auto; justify-content: flex-start; align-content: auto; align-items: auto;"/>
+    </ui:VisualElement>
+</ui:UXML>
