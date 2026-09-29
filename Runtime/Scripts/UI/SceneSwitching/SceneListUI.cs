@@ -72,7 +72,7 @@ public class SceneListUI : UIViewBehaviour
         string key = sceneNames[i];
         elem.Q<Label>("scene-name-label").text = key;
 
-        var button = elem.Q<Button>("scene-remove-button");
+        var button = elem.Q<Button>("scene-load-button");
         button.pickingMode = PickingMode.Position;
         button.userData = key;
     }

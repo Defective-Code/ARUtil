@@ -2,5 +2,5 @@
     <ui:VisualElement name="scene-panel" style="flex-grow: 1; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.76);">
         <ui:ListView name="scene-list" style="background-size: 100% 100%; width: 75%; height: 100%; background-color: rgba(0, 0, 0, 0);"/>
     </ui:VisualElement>
-    <ui:Button text="Close" name="scene-panel-button" style="position: absolute; top: 5px; right: 5px;"/>
+    <ui:Button text="X" name="scene-panel-button" style="position: absolute; top: 5px; right: 5px;"/>
 </ui:UXML>
