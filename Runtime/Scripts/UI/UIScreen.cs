@@ -7,6 +7,7 @@ public enum UIScreen
     AnchorMenu,
     ImageViewer,
     PlaybackMenu,
-    SceneSwitcher
+    SceneSwitcher,
+    SceneList
 
 }

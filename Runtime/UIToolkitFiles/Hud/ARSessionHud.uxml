@@ -6,6 +6,7 @@
         <VisualElement name="ar-menu-dropdown" style="flex-grow: 1; width: 200px; height: 203px; max-height: none; position: absolute; top: 51px; left: auto; background-color: rgb(109, 109, 109); margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px; justify-content: space-evenly; display: none; right: 15px;">
             <Button text="Anchor Menu" name="anchor-menu-button"/>
             <Button text="Playback Menu" name="playback-menu-button"/>
+            <Button text="Scene List" name="scene-list-button"/>
         </VisualElement>
     </VisualElement>
 </UXML>

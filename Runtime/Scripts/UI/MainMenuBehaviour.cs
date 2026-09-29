@@ -14,6 +14,7 @@ public class MainMenuBehaviour : UIViewBehaviour
             UIManager.Instance.Pop();
             SceneSwitcher.Instance.SwitchScene(sceneToLoadFirst);  // load the scene specified in the editor field
         };
+
         Root.Q<Button>("map-menu-button").clicked += () => UIManager.Instance.Push(UIScreen.Map);
     }
 }

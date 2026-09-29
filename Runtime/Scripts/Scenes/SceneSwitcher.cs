@@ -32,9 +32,8 @@ public class SceneSwitcher : MonoBehaviour
 
     }
 
-    //void Start()
+    //public string[] GetScenes()
     //{
-    //    uiManager = UIManager.Instance;
 
     //}
 
