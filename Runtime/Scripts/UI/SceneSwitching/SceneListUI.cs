@@ -70,9 +70,9 @@ public class SceneListUI : UIViewBehaviour
     private void BindItem(SceneVisualElement elem, int i)
     {
         string key = sceneNames[i];
-        elem.Q<Label>("anchor-name-label").text = key;
+        elem.Q<Label>("scene-name-label").text = key;
 
-        var button = elem.Q<Button>("anchor-remove-button");
+        var button = elem.Q<Button>("scene-remove-button");
         button.pickingMode = PickingMode.Position;
         button.userData = key;
     }
