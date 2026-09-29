@@ -27,6 +27,8 @@ public class UIManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
@@ -274,4 +276,11 @@ public class UIManager : MonoBehaviour
     // .view--visible
     private void SetVisible(VisualElement root, bool visible)
         => root.style.opacity = visible ? 1f : 0f;
+
+    // --- data retrieval --------------------------------------------------------------------------------------------
+    public UIViewBehaviour GetUIView(UIScreen screenId)
+    {
+        return _registry[screenId];
+    }
+
 }

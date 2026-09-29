@@ -18,7 +18,7 @@ public class ImageTargetSession : MonoBehaviour
     [SerializeField]
     XRReferenceImageLibrary imagesTargets;
 
-    [SerializeField]
+    //[SerializeField]
     ARSessionHud aRSessionHud;
 
     //[SerializeField]
@@ -129,6 +129,8 @@ public class ImageTargetSession : MonoBehaviour
 
     void OnEnable()
     {
+        aRSessionHud = (ARSessionHud)UIManager.Instance.GetUIView(UIScreen.ARSessionHud); // get the hud from the singleton uimanager 
+
         aRTrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
 
         //if (uiDocument == null)

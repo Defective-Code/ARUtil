@@ -46,6 +46,15 @@ public class ArPlayback : MonoBehaviour
     {
         // Check the permissions for this app
         //PermissionsChecker.CheckPermissions();
+
+        // just setting up the event listeners for the playback UI.
+        ARPlaybackUIToolkit playbackUI = (ARPlaybackUIToolkit)UIManager.Instance.GetUIView(UIScreen.PlaybackMenu);
+        playbackUI.e_PlayPressed += StartPlayback;
+        playbackUI.e_StopPressed += StopPlayback;
+        playbackUI.e_RefreshList += () =>
+        {
+            playbackUI.UpdateFileList(GetAvailableRecordings());
+        };
     }
 
     // Now void, not bool — result comes via PlaybackStartResult since it's async

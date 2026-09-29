@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
@@ -13,7 +13,9 @@ public class SceneSwitcher : MonoBehaviour
 
     public static SceneSwitcher Instance { get; private set; }
 
-    private LoadingCanvas lcanvas;
+    //[SerializeField] 
+    //private SceneSwitchingUI ui;
+    //private UIManager uiManager;
 
     void Awake()
     {
@@ -27,23 +29,18 @@ public class SceneSwitcher : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         //sceneSwitchButton = GetComponent<Button>();
-        
+
     }
 
-    void Start()
-    {
-        lcanvas = LoadingCanvas.Instance;
+    //void Start()
+    //{
+    //    uiManager = UIManager.Instance;
 
-        if (lcanvas == null)
-        {
-            Debug.LogError("Loading canvas was null : Was unable to get the static instance of LoadingCanvas");
-        }
-        //sceneSwitchButton.onClick.AddListener(OnButtonClick);
-    }
+    //}
 
     public void SwitchScene(string scene)
     {
-        
+
         Debug.Log($"Switching to {scene}");
 
         // reset any countdown timers in ObserverManager when we change scenes
@@ -69,25 +66,30 @@ public class SceneSwitcher : MonoBehaviour
         yield return null;
 
         //loadingPanel.SetActive(true);
-        lcanvas.Show();
+        //lcanvas.Show();
+        UIManager uiManager = UIManager.Instance;
+        uiManager.Push(UIScreen.SceneSwitcher);
 
         AsyncOperation loadingScene = SceneManager.LoadSceneAsync(scene);
 
         if (loadingScene == null)
         {
-            Debug.LogError($"Scene '{scene}' not found — is it added to Build Settings?");
-            lcanvas.Hide();
+            Debug.LogError($"Scene '{scene}' not found ï¿½ is it added to Build Settings?");
+            //lcanvas.Hide();
+            uiManager.Pop();
             yield break;
         }
 
         loadingScene.allowSceneActivation = false;
+
+        SceneSwitchingUI ui = (SceneSwitchingUI)uiManager.GetUIView(UIScreen.SceneSwitcher);
 
         // loops while the scene is loading, and updates the loadingbar
         while (!loadingScene.isDone)
         {
             //Debug.Log("Looping isDone");
 
-            lcanvas.SetProgress(Mathf.Clamp01(loadingScene.progress / 0.9f));
+            ui.UpdateSliderValue(Mathf.Clamp01(loadingScene.progress / 0.9f));
 
             if (loadingScene.progress >= 0.9f)
             {
@@ -97,7 +99,7 @@ public class SceneSwitcher : MonoBehaviour
 
             yield return null;
 
-            
+
         }
 
         // Reinit Vuforia only if the new scene has a VuforiaBehaviour
@@ -106,8 +108,9 @@ public class SceneSwitcher : MonoBehaviour
         //    VuforiaApplication.Instance.Initialize(); // or Init() depending on your SDK version
         //}
 
-        lcanvas.Hide(); // hide the loading bar as we are now finished loading the scene
-        lcanvas.SetProgress(0.0f); // reset the loading bar value
+        //lcanvas.Hide(); // hide the loading bar as we are now finished loading the scene
+        uiManager.Pop(); // hide the loading bar as we are now finished loading the scene
+        ui.UpdateSliderValue(0.0f); // reset the loading bar value
 
         //yield return loadingScene; // wait for loading scene to conclude
         //if (ObserverManager.instance != null) ObserverManager.instance.isSceneChanging = false; // then set the isSceneChanging flag to false

@@ -8,7 +8,9 @@ using System.Collections.Generic;
 public class ARAnchorUIController : UIViewBehaviour
 {
     [SerializeField] AnchorData anchorData;
-    [SerializeField] ARAnchorOrganizer aRAnchorOrganizer;
+    //[SerializeField] 
+    ARAnchorOrganizer aRAnchorOrganizer;
+    public Action<string> e_RemoveAnchor;
 
     private UIDocument uiDocument;
     private VisualElement anchorPanel;
@@ -102,7 +104,8 @@ public class ARAnchorUIController : UIViewBehaviour
         {
             foreach (string target in anchorTargetNames)
             {
-                aRAnchorOrganizer.RemoveAnchor(target);
+                //aRAnchorOrganizer.RemoveAnchor(target);
+                RemoveAnchor(target);
             }
             //UpdateAnchorList();
             //RefreshList();
@@ -134,7 +137,8 @@ public class ARAnchorUIController : UIViewBehaviour
 
     private void RemoveAnchor(string key)
     {
-        aRAnchorOrganizer.RemoveAnchor(key); // remove the anchor from the AnchorData SO and the AnchorMAnager AR component
+        e_RemoveAnchor?.Invoke(key);
+        //aRAnchorOrganizer.RemoveAnchor(key); // remove the anchor from the AnchorData SO and the AnchorMAnager AR component
         //RefreshList(); // refresh the list of anchors and their names to sync with now deleted one.
     }
 

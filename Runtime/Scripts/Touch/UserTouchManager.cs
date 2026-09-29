@@ -24,6 +24,8 @@ public class UserTouchManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        DontDestroyOnLoad(this.gameObject);
     }
 
     void OnEnable()

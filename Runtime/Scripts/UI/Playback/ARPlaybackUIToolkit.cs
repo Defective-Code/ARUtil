@@ -2,13 +2,21 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Events;
+using System;
 
 // Class to manage the UI elements and perform the relevant actions (when playback button pressed playback the relevant scene etc)
 //public partial class ARPlaybackUIToolkit : MonoBehaviour
 public class ARPlaybackUIToolkit : UIViewBehaviour
 {
-    [SerializeField] private ArPlayback arPlayback;
+    //[SerializeField] private ArPlayback arPlayback;
     //public UnityEngine.UI.Button toggleButton;
+
+    // Signals for each button press for the ArPlaybakUiListener class to listen to.
+    // To seperate UI from an individual scene, need to get rid of any dependecies each UI controller has, so use a signal instead
+    public Action e_RefreshList;
+    public Action<string> e_PlayPressed;
+    public Action e_StopPressed;
 
     //private PanelRenderer panelRenderer;
     private ListView recordingsList;
@@ -85,10 +93,18 @@ public class ARPlaybackUIToolkit : UIViewBehaviour
 
         //RefreshList();
     }
+
     private void RefreshList()
     {
+        e_RefreshList?.Invoke();
+    }
+
+    public void UpdateFileList(string[] filelist)
+    {
         fileNames.Clear();
-        foreach (string path in arPlayback.GetAvailableRecordings())
+        //foreach (string path in arPlayback.GetAvailableRecordings())
+        //    fileNames.Add(Path.GetFileName(path));
+        foreach (string path in filelist)
             fileNames.Add(Path.GetFileName(path));
 
         recordingsList.itemsSource = fileNames;
@@ -118,13 +134,15 @@ public class ARPlaybackUIToolkit : UIViewBehaviour
     {
         if (string.IsNullOrEmpty(selectedFile)) return;
         statusLabel.text = $"Starting playback: {selectedFile}";
-        arPlayback.StartPlayback(selectedFile);
+        //arPlayback.StartPlayback(selectedFile);
+        e_PlayPressed?.Invoke(selectedFile);
     }
 
     private void OnStopPressed()
     {
         statusLabel.text = "Playback stopped.";
-        arPlayback.StopPlayback();
+        //arPlayback.StopPlayback();
+        e_StopPressed?.Invoke();
     }
 
     void TogglePanel()
