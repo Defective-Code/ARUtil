@@ -31,7 +31,7 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
     private Button closeButton;
 
     private Dictionary<int, Vector2> activePointers = new();
-    private Dictionary<int, Vector2> prevPointers = new();
+    private Dictionary<int, Vector2> prevPointers = new(); // stores the last position of a given pointer (this is for double tap purposes)
 
     private Vector2 position;
     private float scale = 1f;
@@ -178,7 +178,8 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
     void OnPointerMove(PointerMoveEvent evt)
     {
         if (!dragging || isPinching || Touch.activeTouches.Count >= 2) return;
-        Vector2 delta = (Vector2)evt.position - prevPointers[evt.pointerId];
+        prevPointers.TryGetValue(evt.pointerId, out Vector2 prevPointerPos);
+        Vector2 delta = (Vector2)evt.position - prevPointerPos;
         position += delta;
         //lastPointerPos = evt.position;
         prevPointers[evt.pointerId] = evt.position;
