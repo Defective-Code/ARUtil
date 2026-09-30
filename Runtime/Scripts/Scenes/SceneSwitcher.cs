@@ -45,6 +45,13 @@ public class SceneSwitcher : MonoBehaviour
         // reset any countdown timers in ObserverManager when we change scenes
         //if (ObserverManager.instance != null) ObserverManager.instance.OnSceneChange();
 
+        ArPlayback playbackComponent = FindAnyObjectByType<ArPlayback>();
+
+        // if we are currently playing back a recording, we want to first stop the playback, then switch the scene.
+        if (playbackComponent != null && playbackComponent.playingBack) {
+            playbackComponent.StopPlayback();
+        }
+
         StartCoroutine(LoadScene(scene));
     }
 

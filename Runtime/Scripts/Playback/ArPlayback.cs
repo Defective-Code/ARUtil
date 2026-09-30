@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.IO;
-using Codice.Client.BaseCommands.Changelist;
 using Google.XR.ARCoreExtensions;
 using UnityEngine;
 using UnityEngine.XR.ARCore;
@@ -23,7 +22,7 @@ public class ArPlayback : MonoBehaviour
     // reference to the UI element that is static and above individual scenes
     private ARPlaybackUIToolkit playbackUI; 
 
-    private bool playingBack;
+    public bool playingBack; // boolean to track whether or not we are currently playing a recording back
     private ARCoreSessionSubsystem subsystem;
 
     public event Action SessionReset;
