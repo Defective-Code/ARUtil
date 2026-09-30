@@ -14,6 +14,12 @@ public class ARAnchorOrganizer : MonoBehaviour
         anchorListUI.e_RemoveAnchor += RemoveAnchor;
     }
 
+    private void OnDestroy()
+    {
+        ARAnchorUIController anchorListUI = (ARAnchorUIController)UIManager.Instance.GetUIView(UIScreen.AnchorMenu);
+        anchorListUI.e_RemoveAnchor -= RemoveAnchor;
+    }
+
     // Creates an anchor and then runs the code specified by the createChild function
     public async void CreateAnchor(string key, Vector3 position, Quaternion rotation, Action<ARAnchor> createChild)
     {

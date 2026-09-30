@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using Codice.Client.BaseCommands.Changelist;
 using Google.XR.ARCoreExtensions;
 using UnityEngine;
 using UnityEngine.XR.ARCore;
@@ -18,7 +19,10 @@ public class ArPlayback : MonoBehaviour
 
     // Here add references to each targeting type you added.
     [SerializeField] private ImageTargetSession imageTargetSession;
-     
+
+    // reference to the UI element that is static and above individual scenes
+    private ARPlaybackUIToolkit playbackUI; 
+
     private bool playingBack;
     private ARCoreSessionSubsystem subsystem;
 
@@ -48,13 +52,17 @@ public class ArPlayback : MonoBehaviour
         //PermissionsChecker.CheckPermissions();
 
         // just setting up the event listeners for the playback UI.
-        ARPlaybackUIToolkit playbackUI = (ARPlaybackUIToolkit)UIManager.Instance.GetUIView(UIScreen.PlaybackMenu);
+        playbackUI = (ARPlaybackUIToolkit)UIManager.Instance.GetUIView(UIScreen.PlaybackMenu);
         playbackUI.e_PlayPressed += StartPlayback;
         playbackUI.e_StopPressed += StopPlayback;
-        playbackUI.e_RefreshList += () =>
-        {
-            playbackUI.UpdateFileList(GetAvailableRecordings());
-        };
+        playbackUI.e_RefreshList += UpdateRecordingList;
+    }
+
+    private void OnDestroy()
+    {
+        playbackUI.e_PlayPressed -= StartPlayback;
+        playbackUI.e_StopPressed -= StopPlayback;
+        playbackUI.e_RefreshList -= UpdateRecordingList;
     }
 
     // Now void, not bool — result comes via PlaybackStartResult since it's async
@@ -134,6 +142,11 @@ public class ArPlayback : MonoBehaviour
 
         playingBack = true;
         PlaybackStartResult?.Invoke(true);
+    }
+
+    public void UpdateRecordingList()
+    {
+        playbackUI.UpdateFileList(GetAvailableRecordings());
     }
 
     public string[] GetAvailableRecordings()
