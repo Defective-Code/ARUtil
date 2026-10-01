@@ -9,5 +9,4 @@ public enum UIScreen
     PlaybackMenu,
     SceneSwitcher,
     SceneList
-
 }

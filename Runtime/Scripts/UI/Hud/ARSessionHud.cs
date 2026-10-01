@@ -13,6 +13,7 @@ public class ARSessionHud : UIViewBehaviour
     Button ui_OpenAnchorMenu;
     Button ui_OpenPlaybackMenu;
     Button ui_OpenSceneList;
+    Button ui_OpenMap;
 
     bool navOpen; 
 
@@ -36,6 +37,7 @@ public class ARSessionHud : UIViewBehaviour
         ui_OpenAnchorMenu = rootElement.Q<Button>("anchor-menu-button");
         ui_OpenPlaybackMenu = rootElement.Q<Button>("playback-menu-button");
         ui_OpenSceneList = rootElement.Q<Button>("scene-list-button");
+        ui_OpenMap = rootElement.Q<Button>("map-button");
 
         ui_ToggleNavButton.clicked += () =>
         {
@@ -61,6 +63,12 @@ public class ARSessionHud : UIViewBehaviour
         {
             Debug.Log("Clicked scene list button");
             UIManager.Instance.Push(UIScreen.SceneList);
+        };
+
+        ui_OpenMap.clicked += () =>
+        {
+            Debug.Log("Clicked open map button");
+            UIManager.Instance.Push(UIScreen.Map);
         };
     }
 
