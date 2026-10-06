@@ -43,7 +43,6 @@ public class TileMapPanel : UIViewBehaviour
     [Header("Layout")]
     public string viewportName = "map-viewport";
     public Color viewportBackground = new Color(0.95f, 0.94f, 0.91f);
-    //public Color viewportBackground = Color.magenta;
 
     [Header("Zoom")]
     [Tooltip("Panel units one tile covers at its native zoom level. Keep 256 even with 512 px tiles for crisp high-DPI screens")]
@@ -601,24 +600,16 @@ public class TileMapPanel : UIViewBehaviour
 
         float size = (float)tileScreen + seamOverlap;
 
+        // Create any newly-visible tiles (doesn't touch position yet).
         for (int ty = ty0; ty <= ty1; ty++)
-        {
             for (int tx = tx0; tx <= tx1; tx++)
             {
                 ulong key = TileArchive.Key(z, tx, ty);
-                if (!tiles.TryGetValue(key, out Tile t)) t = CreateTile(z, tx, ty, key);
-
-                // Position relative to the viewport centre: all the numbers stay small,
-                // so float precision is fine even at zoom 18+.
-                var s = t.element.style;
-                s.left = (float)(vp.x * 0.5 + (tx / (double)n - cu) * world);
-                s.top = (float)(vp.y * 0.5 + (ty / (double)n - cv) * world);
-                s.width = size;
-                s.height = size;
+                if (!tiles.ContainsKey(key)) CreateTile(z, tx, ty, key);
             }
-        }
 
-        // Drop tiles that have scrolled well off screen (keep a one-tile margin).
+        // Drop tiles that have scrolled well off screen (keep a one-tile margin so a tile
+        // doesn't get destroyed and immediately recreated while straddling the edge).
         removeBuffer.Clear();
         foreach (var kv in tiles)
         {
@@ -632,6 +623,19 @@ public class TileMapPanel : UIViewBehaviour
             t.removed = true;
             t.element.RemoveFromHierarchy();
             tiles.Remove(k);
+        }
+
+        // Reposition every tile that's still alive - including the one-tile margin kept
+        // around for removal above. Previously this only ran for tx0..tx1/ty0..ty1, so a
+        // margin tile's position went stale for a frame (or more, mid-drag) before it was
+        // removed, which showed up as a sliver of the old tile stuck to the trailing edge.
+        foreach (Tile t in tiles.Values)
+        {
+            var s = t.element.style;
+            s.left = (float)(vp.x * 0.5 + (t.x / (double)n - cu) * world);
+            s.top = (float)(vp.y * 0.5 + (t.y / (double)n - cv) * world);
+            s.width = size;
+            s.height = size;
         }
 
         // Load nearest-to-centre tiles first.
@@ -687,19 +691,18 @@ public class TileMapPanel : UIViewBehaviour
             if (archive.TryGetTile(t.z, t.x, t.y, out byte[] data))
             {
                 tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                bool ok = tex.LoadImage(data, true);
-                //Debug.Log($"tile {t.z}/{t.x}/{t.y}: got {data.Length} bytes, decode {(ok ? "OK" : "FAILED")}, size {tex.width}x{tex.height}");
-                if (ok)
+                if (tex.LoadImage(data, true))
                 {
                     tex.wrapMode = TextureWrapMode.Clamp;
                     AddToCache(t.key, tex);
                 }
-                else { Destroy(tex); tex = null; }
+                else
+                {
+                    Destroy(tex);
+                    tex = null;
+                }
             }
-            else
-            {
-                Debug.LogWarning($"tile {t.z}/{t.x}/{t.y}: not found in archive");
-            }
+            // Tiles missing from the archive simply show the background colour.
             if (tex != null) t.element.style.backgroundImage = new StyleBackground(tex);
         }
     }
@@ -830,7 +833,6 @@ public class TileMapPanel : UIViewBehaviour
     void Update()
     {
         if (viewport == null || viewport.panel == null) return;     // not bound, or detached from the panel
-        //Debug.Log($"tick vp={ViewportSize()} tiles={tiles.Count} pending={pending.Count} dirty={dirty}");
 
         HandlePinch();
         UpdateInertia();
