@@ -60,7 +60,7 @@ public class TileMapPanel : UIViewBehaviour
     [Tooltip("Decoded tiles kept in memory (visible tiles are never evicted)")]
     public int textureCacheMB = 96;
     [Tooltip("Tiles are drawn this many units larger to hide hairline seams when scaled")]
-    public float seamOverlap = 1f;
+    public float seamOverlap = 0f;
 
     [Header("Panning")]
     [Tooltip("Pointer must move this far (panel units) before a press becomes a drag; keeps marker taps working")]

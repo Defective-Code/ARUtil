@@ -4,6 +4,7 @@ public enum UIScreen
     MainMenu,
     ARSessionHud,
     Map,
+    Popup,
     AnchorMenu,
     ImageViewer,
     PlaybackMenu,

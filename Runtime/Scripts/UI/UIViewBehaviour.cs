@@ -20,6 +20,7 @@ public abstract class UIViewBehaviour : MonoBehaviour
         if (_initialized) return;
         Root = root;
         Root.AddToClassList("view");
+        //Root.pickingMode = PickingMode.Ignore;
         OnInitialize();
         _initialized = true;
     }

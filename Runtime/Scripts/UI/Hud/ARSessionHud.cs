@@ -39,6 +39,7 @@ public class ARSessionHud : UIViewBehaviour
         ui_OpenSceneList = rootElement.Q<Button>("scene-list-button");
         ui_OpenMap = rootElement.Q<Button>("map-button");
 
+
         ui_ToggleNavButton.clicked += () =>
         {
             Debug.Log("Clicked Toggle Nav");

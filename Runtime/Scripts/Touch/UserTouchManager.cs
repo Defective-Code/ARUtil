@@ -69,6 +69,14 @@ public class UserTouchManager : MonoBehaviour
             return;
         }
 
+        // If we have a UI element open then we also dont need to both doing raycasts as we dont want any touches going "through" the UI
+        if (UIManager.Instance.IsUIElementOpen)
+        {
+            if (debug) Debug.LogWarning("A UI element was open so blocking any raycasts for touchObjects");
+            return;
+        }
+
+
         var activeTouches = Touch.activeTouches;
 
         //if ((Input.touchCount > 0) && (Input.GetTouch(0).phase == TouchPhase.Began))

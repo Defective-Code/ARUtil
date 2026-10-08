@@ -17,6 +17,8 @@ public class SceneSwitcher : MonoBehaviour
     //private SceneSwitchingUI ui;
     //private UIManager uiManager;
 
+    [SerializeField] private AnchorData anchorData;
+
     void Awake()
     {
         if (Instance != null)
@@ -75,6 +77,8 @@ public class SceneSwitcher : MonoBehaviour
         //lcanvas.Show();
         UIManager uiManager = UIManager.Instance;
         uiManager.Push(UIScreen.SceneSwitcher);
+
+        anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
 
         AsyncOperation loadingScene = SceneManager.LoadSceneAsync(scene);
 

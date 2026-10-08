@@ -11,9 +11,10 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
 
     [SerializeField] private UIDocument document;
-    [SerializeField] private UIViewBehaviour[] views; // drag all view components here
     [SerializeField] private UIScreen rootScreen = UIScreen.MainMenu;
     [SerializeField] private float transitionDuration = 0.15f; // Must match the Views.uss file
+
+    private UIViewBehaviour[] views; // drag all view components here
 
     private readonly Dictionary<UIScreen, UIViewBehaviour> _registry = new();
     private readonly Stack<UIViewBehaviour> _stack = new(); // This stack manages our navigation history
@@ -23,10 +24,14 @@ public class UIManager : MonoBehaviour
 
     public UIScreen Current => _stack.Count > 0 ? _stack.Peek().Id : UIScreen.None;
 
+    public bool IsUIElementOpen => _stack.Count > 0; // This is used to check if a UI element in onscreen currently (cause we want to block raycasts if true)
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        views = GetComponentsInChildren<UIViewBehaviour>(); // get all the UIViewBehaviours of children
 
         DontDestroyOnLoad(gameObject);
     }
