@@ -9,5 +9,6 @@ public enum UIScreen
     ImageViewer,
     PlaybackMenu,
     SceneSwitcher,
-    SceneList
+    SceneList,
+    ModelViewer
 }

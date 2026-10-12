@@ -5,8 +5,8 @@ using UnityEngine.Events;
 // Specfies the methods needed for a given 3d object to be "touchable" 
 public class TouchObject : MonoBehaviour
 {
-    //public Action OnTouch;
-    public UnityEvent OnTouch;
+    //public UnityEvent OnTouch;
+    public event Action OnTouch;
 
     private void Awake()
     {
@@ -19,8 +19,13 @@ public class TouchObject : MonoBehaviour
 
         if (OnTouch == null)
         {
-            Debug.LogWarning($"OnTouch was null for {gameObject.name}");
-            OnTouch = new UnityEvent();
+            Debug.LogWarning($"OnTouch was null for {gameObject.name}, meaning it has no listeners");
+            //OnTouch = new Action();
         }
+    }
+
+    public void RaiseTouchEvent()
+    {
+        OnTouch?.Invoke();
     }
 }

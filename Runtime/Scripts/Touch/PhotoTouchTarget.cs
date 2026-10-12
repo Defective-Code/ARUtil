@@ -14,12 +14,12 @@ public class PhotoTouchTarget : MonoBehaviour
         Debug.Log("Phototouch Target being enabled!");
 
         _touchObject = GetComponent<TouchObject>();
-        _touchObject.OnTouch.AddListener(HandleTouched);
+        _touchObject.OnTouch += (HandleTouched);
     }
 
     void OnDisable()
     {
-        _touchObject.OnTouch.RemoveListener(HandleTouched);
+        _touchObject.OnTouch -= (HandleTouched);
     }
 
     private void HandleTouched()

@@ -111,7 +111,8 @@ public class UserTouchManager : MonoBehaviour
                 if (d_namesToInterface.TryGetValue(hitObject.name, out TouchObject to))
                 {
                     Debug.Log($"{hitObject.name} was invoked!");
-                    to.OnTouch?.Invoke();
+                    //to.OnTouch?.Invoke();
+                    to.RaiseTouchEvent();
                 }
             }
         }
