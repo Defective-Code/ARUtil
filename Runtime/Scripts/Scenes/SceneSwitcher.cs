@@ -19,6 +19,8 @@ public class SceneSwitcher : MonoBehaviour
 
     [SerializeField] private AnchorData anchorData;
 
+    private ArPlayback playbackComponent;
+
     void Awake()
     {
         if (Instance != null)
@@ -47,10 +49,25 @@ public class SceneSwitcher : MonoBehaviour
         // reset any countdown timers in ObserverManager when we change scenes
         //if (ObserverManager.instance != null) ObserverManager.instance.OnSceneChange();
 
-        ArPlayback playbackComponent = FindAnyObjectByType<ArPlayback>();
+        if (playbackComponent == null) playbackComponent = FindAnyObjectByType<ArPlayback>();
 
         // if we are currently playing back a recording, we want to first stop the playback, then switch the scene.
         if (playbackComponent != null && playbackComponent.playingBack) {
+            playbackComponent.StopPlayback();
+        }
+
+        StartCoroutine(LoadScene(scene));
+    }
+
+    public void SwitchSceneAdditive(string scene)
+    {
+        Debug.Log($"Switching scene additively to {scene}");
+
+        if (playbackComponent == null) playbackComponent = FindAnyObjectByType<ArPlayback>();
+
+        // if we are currently playing back a recording, we want to first stop the playback, then switch the scene.
+        if (playbackComponent != null && playbackComponent.playingBack)
+        {
             playbackComponent.StopPlayback();
         }
 
@@ -67,7 +84,7 @@ public class SceneSwitcher : MonoBehaviour
     //    StartCoroutine(LoadScene());
     //}
 
-    private IEnumerator LoadScene(string scene)
+    private IEnumerator LoadScene(string scene, bool additive = false)
     {
         //Debug.Log("Loading the scene");
 
@@ -80,7 +97,7 @@ public class SceneSwitcher : MonoBehaviour
 
         anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
 
-        AsyncOperation loadingScene = SceneManager.LoadSceneAsync(scene);
+        AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
 
         if (loadingScene == null)
         {

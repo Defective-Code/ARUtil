@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 // Specfies the methods needed for a given 3d object to be "touchable" 
-public class TouchObject : MonoBehaviour
+public abstract class TouchObject : MonoBehaviour
 {
     //public UnityEvent OnTouch;
     public event Action OnTouch;

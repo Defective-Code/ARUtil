@@ -26,6 +26,10 @@ public class UIManager : MonoBehaviour
 
     public bool IsUIElementOpen => _stack.Count > 0; // This is used to check if a UI element in onscreen currently (cause we want to block raycasts if true)
 
+    [SerializeField] private bool debug;
+    private Button toggleUI;
+    private bool uiVisible;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -43,12 +47,26 @@ public class UIManager : MonoBehaviour
         _hudLayer = root.Q<VisualElement>("hud-layer");
         _overlayLayer = root.Q<VisualElement>("overlay-layer");
 
-        foreach (var view in views)
+        // if debug is on we want to add the button to quickly hide the UI
+        if (debug)
         {
-            Debug.Log($"Mounting - {view.Id}");
-            _registry[view.Id] = view;
-            Mount(view);
+            toggleUI = root.Q<Button>("toggle-ui");
+            toggleUI.style.display = DisplayStyle.Flex;
+            toggleUI.clicked += () =>
+            {
+                uiVisible = !uiVisible;
+                toggleUI.text = uiVisible ? "Show UI" : "Hide UI";
+                ToggleUI();
+                
+            };
         }
+
+            foreach (var view in views)
+            {
+                Debug.Log($"Mounting - {view.Id}");
+                _registry[view.Id] = view;
+                Mount(view);
+            }
 
         SetHudVisible(false);
         Push(rootScreen);
@@ -286,6 +304,15 @@ public class UIManager : MonoBehaviour
     public UIViewBehaviour GetUIView(UIScreen screenId)
     {
         return _registry[screenId];
+    }
+
+    // Global functions 
+
+    private void ToggleUI()
+    {
+        _pageLayer.style.display = uiVisible ? DisplayStyle.None : DisplayStyle.Flex;
+        _hudLayer.style.display = uiVisible ? DisplayStyle.None : DisplayStyle.Flex;
+        _overlayLayer.style.display = uiVisible ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
 }

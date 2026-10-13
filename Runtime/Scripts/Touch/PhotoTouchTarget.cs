@@ -2,24 +2,26 @@ using UnityEngine;
 
 // Sits alongside TouchObject on any 3D object that should open
 // the ImageViewer when touched.
-[RequireComponent(typeof(TouchObject))]
-public class PhotoTouchTarget : MonoBehaviour
+//[RequireComponent(typeof(TouchObject))]
+public class PhotoTouchTarget : TouchObject
 {
     [SerializeField] private Texture2D photo;
 
-    private TouchObject _touchObject;
+    //private TouchObject _touchObject;
 
     void OnEnable()
     {
         Debug.Log("Phototouch Target being enabled!");
 
-        _touchObject = GetComponent<TouchObject>();
-        _touchObject.OnTouch += (HandleTouched);
+        //_touchObject = GetComponent<TouchObject>();
+        //_touchObject.OnTouch += (HandleTouched);
+        OnTouch += (HandleTouched);
     }
 
     void OnDisable()
     {
-        _touchObject.OnTouch -= (HandleTouched);
+        //_touchObject.OnTouch -= (HandleTouched);
+        OnTouch -= (HandleTouched);
     }
 
     private void HandleTouched()
