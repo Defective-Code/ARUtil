@@ -276,9 +276,6 @@ public class ImageTargetSession : MonoBehaviour
         Debug.Log("Creating Image Anchor");
 
         MarkerSettings childSettings = templateChild.GetComponent<MarkerSettings>();
-        bool worldOrient = childSettings.orientRelToAnchor;
-        Quaternion flatRotation = Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0);
-        Pose imagePose = worldOrient ? new Pose(image.transform.position, flatRotation) : new Pose(image.transform.position, image.transform.rotation);
 
         //var result = await aRAnchorManager.TryAddAnchorAsync(imagePose);
         //if (result.status.IsSuccess())
@@ -303,7 +300,11 @@ public class ImageTargetSession : MonoBehaviour
         //    Debug.LogError($"Failed to create the anchor for tag {image.referenceImage.name} with {result.status}");
         //}
 
-        aRAnchorOrganizer.CreateAnchor(image.referenceImage.name, image.transform.position, worldOrient ? flatRotation : image.transform.rotation, (ARAnchor anchor) =>
+        aRAnchorOrganizer.CreateAnchor(
+        image.referenceImage.name,
+        childSettings.isCrop ? childSettings.AlignCrop(image) : image.transform.position,
+        childSettings.orientRelToAnchor ? image.transform.rotation : Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0), 
+        (ARAnchor anchor) =>
         {
             //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
 

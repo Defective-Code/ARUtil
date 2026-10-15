@@ -9,9 +9,16 @@ public class AuthoringSpaceAligner : MonoBehaviour
         Align();
     }
 
-    void Update()
+    void Start()
     {
-        // check saying not to run this if the application is actually running, we only want this in the editor
+        // On start once, we want to offset any rotation applied to the real 
+        //Align(); 
+        transform.rotation = Quaternion.identity;
+    }
+
+    private void Update()
+    {
+        // Olny want this inside the editor, so check thats its not running 
         if (!Application.isPlaying)
         {
             Align();

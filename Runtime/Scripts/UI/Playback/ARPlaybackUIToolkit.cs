@@ -162,4 +162,14 @@ public class ARPlaybackUIToolkit : UIViewBehaviour
         isVisible = !isVisible;
         this.gameObject.SetActive(isVisible);
     }
+
+    public void ToggleStopButton(bool toggle)
+    {
+        stopButton.SetEnabled(toggle);
+    }
+
+    public void TogglePlayButton(bool toggle)
+    {
+        playButton.SetEnabled(toggle);
+    }
 }

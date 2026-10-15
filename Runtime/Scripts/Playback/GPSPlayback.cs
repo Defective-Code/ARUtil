@@ -31,6 +31,8 @@ public class GPSPlayback : MonoBehaviour
     private int dataIndex; // index of which data entry we are currently at
     private int interval; // interval between gps data recordings.
 
+    Coroutine pollRoutine;
+
     void Start() 
     {
         if (locationData == null)
@@ -46,6 +48,8 @@ public class GPSPlayback : MonoBehaviour
             return;
         }
     }
+
+    private void OnDisable() => StopGPSPlayback();
 
     // Class to read from a file and convert the json back into a data structure
     public void ReadbackGPSData(string filepath)
@@ -88,67 +92,107 @@ public class GPSPlayback : MonoBehaviour
         return (int)Math.Floor(gpsRecordingData.samples[1].sessionTimeSeconds - gpsRecordingData.samples[0].sessionTimeSeconds);
     }
 
+    //public void StartGPSPlayback()
+    //{
+    //    if (gpsRecordingData == null)
+    //    {
+    //        Debug.LogError("gpsRecordingData was NULL, please call ReadbackGPSData first with a valid filepath");
+    //        return;
+    //    }
+
+    //     StartCoroutine(PollGPSData());
+    //}
+
     public void StartGPSPlayback()
     {
-        if (gpsRecordingData == null)
-        {
-            Debug.LogError("gpsRecordingData was NULL, please call ReadbackGPSData first with a valid filepath");
-            return;
-        }
-
-         StartCoroutine(PollGPSData());
+        if (gpsRecordingData == null) { Debug.LogError("Call ReadbackGPSData first"); return; }
+        StopGPSPlayback();                       // never allow two at once
+        pollRoutine = StartCoroutine(PollGPSData());
     }
 
-    // Coroutine to poll the GPS data on the correct intervals
+    public void StopGPSPlayback()
+    {
+        if (pollRoutine == null) return;
+        StopCoroutine(pollRoutine);
+        pollRoutine = null;
+        RetrieveLocationData.Instance?.StartService();
+    }
+
+
+    //// Coroutine to poll the GPS data on the correct intervals
+    //IEnumerator PollGPSData()
+    //{
+    //    if (gpsRecordingData == null || gpsRecordingData.samples == null || gpsRecordingData.samples.Count == 0)
+    //    {
+    //        Debug.LogError("PollGPSData started without valid GPS recording data. Call ReadbackGPSData first.");
+    //        yield break;
+    //    }
+
+    //    // If our scene we want to playback in is actively retrieving the gps information, we want to temporariliy stop it while we playback
+    //    RetrieveLocationData locationDataService = RetrieveLocationData.Instance;
+    //    if (locationDataService != null)
+    //    {
+    //        locationDataService.StopService();
+    //    }
+    //    else
+    //    {
+    //        Debug.LogWarning("LocationService instance was null so readback of GPS information was not successful.");
+    //        yield break; // get out of coroutine as there is no active lcoation readback.
+    //    }
+
+    //    while (dataIndex < gpsRecordingData.samples.Count)
+    //    {
+    //        GpsSample sample = gpsRecordingData.samples[dataIndex];
+
+    //        if (locationData == null)
+    //        {
+    //            Debug.LogError("PollGPSData: locationData ScriptableObject reference is null.");
+    //            yield break;
+    //        }
+
+    //        locationData.latitude = sample.latitude;
+    //        locationData.longitude = sample.longitude;
+    //        locationData.altitude = sample.altitude;
+
+    //        if (locationData.locationDataUpdated == null)
+    //        {
+    //            Debug.LogWarning("PollGPSData: locationData.locationDataUpdated UnityEvent is null OR simply has no subscribers within the scene (meaning no function is being exectued when this Action is invoked).");
+    //            //yield break;
+    //        }
+    //        locationData.locationDataUpdated?.Invoke(); // check that the delegate has at least one subscribed function before invoking - otherwise causes a crash
+
+    //        yield return new WaitForSeconds(interval);
+    //        dataIndex++;
+    //    }
+
+    //    // Restart the retreival of gps info if the app was doing it prior to playback.
+    //    if (locationDataService != null)
+    //    {
+    //        locationDataService.StartService();
+    //    }
+    //}
+
+
     IEnumerator PollGPSData()
     {
-        if (gpsRecordingData == null || gpsRecordingData.samples == null || gpsRecordingData.samples.Count == 0)
-        {
-            Debug.LogError("PollGPSData started without valid GPS recording data. Call ReadbackGPSData first.");
-            yield break;
-        }
+        var service = RetrieveLocationData.Instance;
+        if (service == null || locationData == null) { pollRoutine = null; yield break; }
 
-        // If our scene we want to playback in is actively retrieving the gps information, we want to temporariliy stop it while we playback
-        RetrieveLocationData locationDataService = RetrieveLocationData.Instance;
-        if (locationDataService != null)
-        {
-            locationDataService.StopService();
-        }
-        else
-        {
-            Debug.LogWarning("LocationService instance was null so readback of GPS information was not successful.");
-            yield break; // get out of coroutine as there is no active lcoation readback.
-        }
+        service.StopService();
+        float startTime = Time.time;
 
-        while (dataIndex < gpsRecordingData.samples.Count)
+        foreach (var sample in gpsRecordingData.samples)
         {
-            GpsSample sample = gpsRecordingData.samples[dataIndex];
-
-            if (locationData == null)
-            {
-                Debug.LogError("PollGPSData: locationData ScriptableObject reference is null.");
-                yield break;
-            }
+            float wait = sample.sessionTimeSeconds - (Time.time - startTime);
+            if (wait > 0f) yield return new WaitForSeconds(wait);
 
             locationData.latitude = sample.latitude;
             locationData.longitude = sample.longitude;
             locationData.altitude = sample.altitude;
-
-            if (locationData.locationDataUpdated == null)
-            {
-                Debug.LogWarning("PollGPSData: locationData.locationDataUpdated UnityEvent is null OR simply has no subscribers within the scene (meaning no function is being exectued when this Action is invoked).");
-                //yield break;
-            }
-            locationData.locationDataUpdated?.Invoke(); // check that the delegate has at least one subscribed function before invoking - otherwise causes a crash
-
-            yield return new WaitForSeconds(interval);
-            dataIndex++;
+            locationData.locationDataUpdated?.Invoke();
         }
 
-        // Restart the retreival of gps info if the app was doing it prior to playback.
-        if (locationDataService != null)
-        {
-            locationDataService.StartService();
-        }
+        pollRoutine = null;
+        service.StartService();
     }
 }

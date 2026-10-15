@@ -32,6 +32,8 @@ public class ArPlayback : MonoBehaviour
 
     private string PlaybackFolder => Path.Combine(Application.persistentDataPath, "Recordings");
 
+    private bool transitioning;
+
     private void Awake()
     {
         if (!Directory.Exists(PlaybackFolder))
@@ -68,9 +70,9 @@ public class ArPlayback : MonoBehaviour
     public void StartPlayback(string folderName)
     {
         // check for when while already playing back a reocrding the user tries to playback a recording - default this causes a crash
-        if (playingBack)
+        if (playingBack || transitioning)
         {
-            Debug.Log("Already playing back a recording - please stop the currently playing recording before trying to play back a recording");
+            Debug.Log("Already playing back a recording - please stop the currently playing recording before trying to play back a recording | OR currently transitioning from a previous playback");
             return;
         }
 
@@ -102,44 +104,65 @@ public class ArPlayback : MonoBehaviour
                 return;
             }
         }
-        //new Uri(gpsPath).AbsoluteUri
-        gpsPlayback.ReadbackGPSData(gpsPath); // read and load the json gps data into the readback class
+        ////new Uri(gpsPath).AbsoluteUri
+        //gpsPlayback.ReadbackGPSData(gpsPath); // read and load the json gps data into the readback class
 
+        //StartCoroutine(StartPlaybackRoutine(uri));
+
+        //gpsPlayback.StartGPSPlayback(); // start loading the read json data into the LocationData scriptable object
+
+        gpsPlayback.ReadbackGPSData(gpsPath);    // load only
         StartCoroutine(StartPlaybackRoutine(uri));
-
-        gpsPlayback.StartGPSPlayback(); // start loading the read json data into the LocationData scriptable object
     }
 
     private IEnumerator StartPlaybackRoutine(string uri)
     {
-        ClearSessionState(); // arSession.Reset() + SessionReset event
+        transitioning = true;
+        playbackUI.TogglePlayButton(false);
+        playbackUI.ToggleStopButton(false);
+
+        ClearSessionState();
+        arSession.enabled = false;               // pause the native session
+        yield return new WaitForSeconds(0.5f);   // let camera/VIO threads wind down
+        yield return WaitForSessionSettled();
+
 
         // Reset() is asynchronous — wait until the session has actually left
         // SessionInitializing before touching playback, or we hit the same race again.
-        float elapsed = 0f;
-        while (ARSession.state == ARSessionState.SessionInitializing && elapsed < ResetTimeoutSeconds)
-        {
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
+        //float elapsed = 0f;
+        //while (ARSession.state == ARSessionState.SessionInitializing && elapsed < ResetTimeoutSeconds)
+        //{
+        //    elapsed += Time.deltaTime;
+        //    yield return null;
+        //}
 
-        if (ARSession.state == ARSessionState.SessionInitializing)
-        {
-            Debug.LogError("ArPlaybackManager: Timed out waiting for session reset before starting playback.");
-            PlaybackStartResult?.Invoke(false);
-            yield break;
-        }
+        //if (ARSession.state == ARSessionState.SessionInitializing)
+        //{
+        //    Debug.LogError("ArPlaybackManager: Timed out waiting for session reset before starting playback.");
+        //    PlaybackStartResult?.Invoke(false);
+        //    yield break;
+        //}
 
         Debug.Log($"Printing filepath : {uri}");
         ArStatus status = subsystem.StartPlaybackUri(uri);
+        yield return null;
+        arSession.enabled = true;                // resume, now reading the dataset
+
         if (status != ArStatus.Success)
         {
             Debug.LogError($"Failed to start playback: {status}");
+            transitioning = false;
             PlaybackStartResult?.Invoke(false);
             yield break;
         }
 
         playingBack = true;
+        gpsPlayback.StartGPSPlayback();          // only now
+        
+        transitioning = false;
+        playbackUI.TogglePlayButton(true);
+        playbackUI.ToggleStopButton(true);
+
         PlaybackStartResult?.Invoke(true);
     }
 
@@ -158,18 +181,50 @@ public class ArPlayback : MonoBehaviour
         return playbackManager.PlaybackStatus;
     }
 
+    //public void StopPlayback()
+    //{
+    //    if (!playingBack)
+    //    {
+    //        Debug.Log("Ignoring stop request as no playback is occuring");
+    //        return;
+    //    }
+
+    //    subsystem?.StopPlaybackUri();
+    //    playingBack = false;
+
+    //    ClearSessionState();
+    //}
+
     public void StopPlayback()
     {
-        if (!playingBack)
-        {
-            Debug.Log("Ignoring stop request as no playback is occuring");
-            return;
-        }
+        if (!playingBack || transitioning) return;
+        StartCoroutine(StopPlaybackRoutine());
+    }
 
+    private IEnumerator StopPlaybackRoutine()
+    {
+        transitioning = true;
+        playbackUI.TogglePlayButton(false);
+        playbackUI.ToggleStopButton(false);
+
+        gpsPlayback.StopGPSPlayback();
         subsystem?.StopPlaybackUri();
         playingBack = false;
-
         ClearSessionState();
+        yield return WaitForSessionSettled();
+        transitioning = false;
+
+        playbackUI.TogglePlayButton(true);
+        playbackUI.ToggleStopButton(true);
+
+    }
+
+    private IEnumerator WaitForSessionSettled()
+    {
+        yield return null; yield return null;    // let Reset() take effect
+        float t = 0f;
+        while (ARSession.state == ARSessionState.SessionInitializing && t < ResetTimeoutSeconds)
+        { t += Time.deltaTime; yield return null; }
     }
 
     // method to clear all the data that was created during the playback
@@ -177,7 +232,7 @@ public class ArPlayback : MonoBehaviour
     {
         anchorOrganizer.ClearAnchors(); // 
         imageTargetSession.ClearData();
-        arSession.Reset();
+        //arSession.Reset();
         //SessionReset?.Invoke();
         
     }
