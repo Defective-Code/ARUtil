@@ -12,6 +12,9 @@ public class ImageTargetSession : MonoBehaviour
     //[SerializeField]
     //ARAnchorManager aRAnchorManager;
 
+    //[SerializeField]
+    //ARSession session;
+
     [SerializeField]
     ARTrackedImageManager aRTrackedImageManager;
 
@@ -43,6 +46,8 @@ public class ImageTargetSession : MonoBehaviour
 
     [SerializeField]
     ARAnchorOrganizer aRAnchorOrganizer;
+
+    [SerializeField] private bool debug;
 
     //Dictionary<string, ARAnchor> d_ImageAnchor = new Dictionary<string, ARAnchor>();
     Dictionary<string, float> d_Times = new();
@@ -126,6 +131,27 @@ public class ImageTargetSession : MonoBehaviour
             d_namesChildren.Add(child.name, child.gameObject);
         }
     }
+
+    //IEnumerator Start()
+    //{
+
+    //    while (ARSession.state < ARSessionState.Ready) yield return null;
+
+    //    // This code disables and reenables the tracked image manager so that the reference library is re-set to the current one
+    //    // Because the underlying ARCore / ARKit reference library is set on first start and not updated even when new XRCore gameobejcts contain a new one
+    //    aRTrackedImageManager.enabled = false;
+    //    yield return null;
+    //    aRTrackedImageManager.enabled = true;
+
+    //    session.Reset(); // forces the native session to rebuild with it
+    //    while (ARSession.state == ARSessionState.SessionInitializing) yield return null; // wait until the session is actually tracking
+
+    //    if (debug)
+    //    {
+    //        Debug.LogWarning($"Library: {aRTrackedImageManager.referenceLibrary}, count: {aRTrackedImageManager.referenceLibrary?.count}");
+    //        Debug.LogWarning($"Subsystem lib: {aRTrackedImageManager.subsystem?.imageLibrary}");
+    //    }
+    //}
 
     void OnEnable()
     {
@@ -224,6 +250,8 @@ public class ImageTargetSession : MonoBehaviour
         foreach (var updatedImage in eventArgs.updated)
         {
             string imageName = updatedImage.referenceImage.name;
+
+            //if (debug) Debug.LogWarning($"Detected {imageName}!!!");
 
             if (updatedImage.trackingState == TrackingState.Tracking)
             {
