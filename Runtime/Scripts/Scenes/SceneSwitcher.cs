@@ -56,6 +56,9 @@ public class SceneSwitcher : MonoBehaviour
             playbackComponent.StopPlayback();
         }
 
+        // Clean up the data from the previous scene when we load a new one.
+        ArRoot.Instance.ResetArSession();
+
         StartCoroutine(LoadScene(scene));
     }
 

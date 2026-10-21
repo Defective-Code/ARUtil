@@ -30,7 +30,7 @@ public class ModelTouchTarget : TouchObject
         //viewCopy.gameObject.transform.localPosition = defaultPosition; // make the copy sit 0.5u in front of the camera
 
         UIManager.Instance.Push(UIScreen.ModelViewer, viewCopy);
-        FindFirstObjectByType<ModelViewerLauncher>().Open(gameObject);
+        ModelViewerLauncher.Instance.Open(gameObject);
     }
 
 

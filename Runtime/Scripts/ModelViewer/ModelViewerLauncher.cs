@@ -4,12 +4,25 @@ using UnityEngine.SceneManagement;
 
 public class ModelViewerLauncher : MonoBehaviour
 {
+    public static ModelViewerLauncher Instance { get; private set; }
+
     [SerializeField] string viewerSceneName = "ModelViewer";
     [SerializeField] Camera arCamera;
     [SerializeField] Behaviour[] disableWhileViewing;  // AR touch/placement scripts, raycast managers' input, etc.
 
     bool isOpen;
 
+    void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(Instance);
+            return;
+        } 
+
+        Instance = this;
+        DontDestroyOnLoad(Instance);
+    }
 
     public void Open(GameObject prefab)
     {

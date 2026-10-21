@@ -12,8 +12,8 @@ public class AuthoringSpaceAligner : MonoBehaviour
     void Start()
     {
         // On start once, we want to offset any rotation applied to the real 
-        //Align(); 
-        transform.rotation = Quaternion.identity;
+        Align();
+        //transform.rotation = Quaternion.identity;
     }
 
     private void Update()

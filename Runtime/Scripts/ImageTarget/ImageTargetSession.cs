@@ -15,7 +15,6 @@ public class ImageTargetSession : MonoBehaviour
     //[SerializeField]
     //ARSession session;
 
-    [SerializeField]
     ARTrackedImageManager aRTrackedImageManager;
 
     [SerializeField]
@@ -44,8 +43,8 @@ public class ImageTargetSession : MonoBehaviour
     [SerializeField]
     AnchorData anchorData;
 
-    [SerializeField]
-    ARAnchorOrganizer aRAnchorOrganizer;
+    //[SerializeField]
+    //ARAnchorOrganizer aRAnchorOrganizer;
 
     [SerializeField] private bool debug;
 
@@ -66,17 +65,17 @@ public class ImageTargetSession : MonoBehaviour
     private void OnValidate()
     {
         // unchanged — no UI Toolkit-specific logic here
-        GameObject xrOrigin = GameObject.Find("XR Origin");
+        //GameObject xrOrigin = GameObject.Find("XR Origin");
 
         //if (aRAnchorManager == null)
         //{
         //    aRAnchorManager = xrOrigin?.GetComponent<ARAnchorManager>();
         //}
 
-        if (aRTrackedImageManager == null)
-        {
-            aRTrackedImageManager = xrOrigin?.GetComponent<ARTrackedImageManager>();
-        }
+        //if (aRTrackedImageManager == null)
+        //{
+        //aRTrackedImageManager = xrOrigin?.GetComponent<ARTrackedImageManager>();
+        //}
 
         GameObject imageTargetSession = transform.gameObject;
         if (imagesTargets == null)
@@ -153,40 +152,36 @@ public class ImageTargetSession : MonoBehaviour
     //    }
     //}
 
-    void OnEnable()
+    private void Start()
     {
         aRSessionHud = (ARSessionHud)UIManager.Instance.GetUIView(UIScreen.ARSessionHud); // get the hud from the singleton uimanager 
 
+        aRTrackedImageManager = ArRoot.Instance.aRTrackedImageManager;
+        aRTrackedImageManager.referenceLibrary = imagesTargets; // update the imageTargets refereneLibrary in the trackedImageManager
         aRTrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
 
-        //if (uiDocument == null)
-        //{
-        //    Debug.LogError("UIDocument reference is missing on ImageTargetSession.");
-        //}
-        //else if (uiDocument.rootVisualElement == null)
-        //{
-        //    // Rare with default script execution order, but guard against the
-        //    // UIDocument not having built its tree yet.
-        //    Debug.LogError("UIDocument.rootVisualElement was null in OnEnable. " +
-        //        "Check script execution order relative to UIDocument.");
-        //}
-        //else
-        //{
-        //    BindUIElements(uiDocument.rootVisualElement);
-        //}
+        ArRoot.Instance.aRPlayback.SessionReset += ClearData;
 
         ARSession.stateChanged += OnSessionStateChanged;
     }
 
-    void OnDisable()
+    void OnEnable()
+    {
+        
+    }
+
+    private void OnDestroy()
     {
         aRTrackedImageManager.trackablesChanged.RemoveListener(OnTrackedImagesChanged);
 
-
-        //if (ui_ResetAnchorButton != null)
-        //    ui_ResetAnchorButton.clicked -= ReloadAnchor;
-
         ARSession.stateChanged -= OnSessionStateChanged;
+
+        ArRoot.Instance.aRPlayback.SessionReset -= ClearData;
+    }
+
+    void OnDisable()
+    {
+
     }
 
 
@@ -247,6 +242,11 @@ public class ImageTargetSession : MonoBehaviour
 
     void OnTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
     {
+        //foreach (var detectedImage in eventArgs.added)
+        //{
+
+        //}
+
         foreach (var updatedImage in eventArgs.updated)
         {
             string imageName = updatedImage.referenceImage.name;
@@ -328,10 +328,10 @@ public class ImageTargetSession : MonoBehaviour
         //    Debug.LogError($"Failed to create the anchor for tag {image.referenceImage.name} with {result.status}");
         //}
 
-        aRAnchorOrganizer.CreateAnchor(
+        ArRoot.Instance.aRAnchorOrganizer.CreateAnchor(
         image.referenceImage.name,
         childSettings.isCrop ? childSettings.AlignCrop(image) : image.transform.position,
-        childSettings.orientRelToAnchor ? image.transform.rotation : Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0), 
+        childSettings.followImageRot ? image.transform.rotation : Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0), 
         (ARAnchor anchor) =>
         {
             //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);

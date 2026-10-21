@@ -5,7 +5,7 @@ using UnityEngine.XR.ARFoundation;
 public class MarkerSettings : MonoBehaviour
 {
 
-    public bool orientRelToAnchor; // toggle to control if orientation follows parent ARAnchor or is flat. The default is flat as in the anchor is aligned with the world axes
+    public bool followImageRot = true; // bool to control if a the content to display follows the rotation of the detected image. False means it follows the World Up Vector, true means the marker is the flat plane on which the content is placed
 
     public bool isCrop = false; // flag for saying a given image in the the reference library is a crop of another.
     public Vector2 originalSizePx = new Vector2(4846, 3665);      // W, H of the full panel image

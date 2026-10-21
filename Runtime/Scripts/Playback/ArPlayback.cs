@@ -11,13 +11,16 @@ using UnityEngine.XR.ARFoundation;
 [RequireComponent(typeof(ARPlaybackManager))]
 public class ArPlayback : MonoBehaviour
 {
+    //public static ArPlayback Instance { get; private set; } 
+
+
     [SerializeField] private ARSession arSession;
     [SerializeField] private ARPlaybackManager playbackManager;
     [SerializeField] private GPSPlayback gpsPlayback;
-    [SerializeField] private ARAnchorOrganizer anchorOrganizer;
+    //[SerializeField] private ARAnchorOrganizer anchorOrganizer;
 
     // Here add references to each targeting type you added.
-    [SerializeField] private ImageTargetSession imageTargetSession;
+    //[SerializeField] private ImageTargetSession imageTargetSession;
 
     // reference to the UI element that is static and above individual scenes
     private ARPlaybackUIToolkit playbackUI; 
@@ -36,6 +39,15 @@ public class ArPlayback : MonoBehaviour
 
     private void Awake()
     {
+        //if (Instance != null)
+        //{
+        //    Destroy(gameObject);
+        //    return;
+        //}
+
+        //Instance = this;
+        //DontDestroyOnLoad(gameObject);
+
         if (!Directory.Exists(PlaybackFolder))
             Directory.CreateDirectory(PlaybackFolder);
 
@@ -230,10 +242,10 @@ public class ArPlayback : MonoBehaviour
     // method to clear all the data that was created during the playback
     private void ClearSessionState()
     {
-        anchorOrganizer.ClearAnchors(); // 
-        imageTargetSession.ClearData();
+        //anchorOrganizer.ClearAnchors(); // 
+        //imageTargetSession.ClearData();
         //arSession.Reset();
-        //SessionReset?.Invoke();
-        
+        SessionReset?.Invoke();
+
     }
 }
