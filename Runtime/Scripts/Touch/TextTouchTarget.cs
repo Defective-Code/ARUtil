@@ -1,8 +1,10 @@
+using TMPro;
 using UnityEngine;
 
 public class TextTouchTarget : TouchObject
 {
-    [SerializeField] private TextMesh text;
+    //[SerializeField] private TextMesh text;
+    [SerializeField] private TextMeshPro text;
     private bool textToggle;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

@@ -328,23 +328,32 @@ public class ImageTargetSession : MonoBehaviour
         //    Debug.LogError($"Failed to create the anchor for tag {image.referenceImage.name} with {result.status}");
         //}
 
+        // rotation of the placeholder as authored in the editor
+        Quaternion authored = templateChild.transform.rotation;
+        Quaternion authoredRef = childSettings.followImageRot ? authored : UprightYaw(templateChild.transform);
+
         ArRoot.Instance.aRAnchorOrganizer.CreateAnchor(
-        image.referenceImage.name,
-        childSettings.isCrop ? childSettings.AlignCrop(image) : image.transform.position,
-        childSettings.followImageRot ? image.transform.rotation : Quaternion.Euler(0, image.transform.rotation.eulerAngles.y, 0), 
-        (ARAnchor anchor) =>
-        {
-            //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
+            image.referenceImage.name,
+            childSettings.isCrop ? childSettings.AlignCrop(image) : image.transform.position,
+            childSettings.followImageRot ? image.transform.rotation : UprightYaw(image.transform), 
+            (ARAnchor anchor) =>
+            {
+                //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
 
-            GameObject instance = Instantiate(templateChild, anchor.transform);
-            //instance.transform.SetParent(anchor.transform, false);
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localPosition = Vector3.zero;
-            instance.SetActive(true); // template was disabled; the live clone should be enabled
+                GameObject instance = Instantiate(templateChild, anchor.transform);
+                //instance.transform.SetParent(anchor.transform, false);
+                instance.transform.localRotation = Quaternion.identity;
+                instance.transform.localPosition = Vector3.zero;
 
-            Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
-            //Debug.Log($"Child was moved to {child.transform.position}");
-        });
+                // keep the content in the editor's world axes relative to the real sign
+                foreach (var aligner in instance.GetComponentsInChildren<AuthoringSpaceAligner>(true))
+                    aligner.transform.localRotation = Quaternion.Inverse(authoredRef);
+
+                instance.SetActive(true); // template was disabled; the live clone should be enabled
+
+                Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
+                //Debug.Log($"Child was moved to {child.transform.position}");
+            });
     }
 
     void ReloadAnchor()
@@ -368,5 +377,16 @@ public class ImageTargetSession : MonoBehaviour
         anchorData.RemoveAnchor(v_currentTracking);
     }
 
-    
+    static Quaternion UprightYaw(Transform imageT)
+    {
+        Vector3 dir = imageT.up;          // the image's normal (ARCore local +Y)
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.01f)     // image lying flat: use its "top" direction instead
+        {
+            dir = imageT.forward;
+            dir.y = 0f;
+        }
+        return Quaternion.LookRotation(dir.normalized, Vector3.up);
+    }
+
 }

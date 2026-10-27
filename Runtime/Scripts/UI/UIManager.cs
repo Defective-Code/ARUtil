@@ -68,7 +68,7 @@ public class UIManager : MonoBehaviour
                 Mount(view);
             }
 
-        SetHudVisible(false);
+        //SetHudVisible(false);
         Push(rootScreen);
     }
 

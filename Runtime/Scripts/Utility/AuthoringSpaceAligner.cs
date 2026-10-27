@@ -9,13 +9,6 @@ public class AuthoringSpaceAligner : MonoBehaviour
         Align();
     }
 
-    void Start()
-    {
-        // On start once, we want to offset any rotation applied to the real 
-        Align();
-        //transform.rotation = Quaternion.identity;
-    }
-
     private void Update()
     {
         // Olny want this inside the editor, so check thats its not running 
