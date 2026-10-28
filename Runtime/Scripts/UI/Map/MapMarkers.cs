@@ -18,6 +18,7 @@ public class MapMarkers : MonoBehaviour
         foreach (var site in siteData.sites)
         {
             tileMapPanel.AddMarker(site.name, site.lat, site.lon);
+            //tileMapPanel.AddMarker("Kahuariki", site.lat, site.lon); // temp change for demo purpose
         }
 
         tileMapPanel.MarkerClicked += MarkerClickedListener;
@@ -30,6 +31,7 @@ public class MapMarkers : MonoBehaviour
         markerContent.style.flexShrink = 0;
         markerContent.style.alignSelf = Align.Center;
         markerContent.style.flexDirection = FlexDirection.Column;
+        markerContent.style.color = Color.white;
 
         // Optional: make it read as a rectangle/panel
         markerContent.style.paddingTop = 10;
@@ -42,18 +44,23 @@ public class MapMarkers : MonoBehaviour
         markerContent.style.borderBottomLeftRadius = 8;
         markerContent.style.borderBottomRightRadius = 8;
 
+
+
         Label switchLabel = new Label { text = $"Switch scene to {id}" };
+        switchLabel.style.color = Color.white;
 
         Button cancelButton = new Button { text = "Cancel" };
         cancelButton.clicked += () => {
-            UIManager.Instance.Pop();
+            UIManager.Instance.Pop();  //this pops the popup off
         };
 
         Button acceptButton = new Button { text = "Accept" };
         acceptButton.clicked += () =>
         {
-            UIManager.Instance.Pop();
+            UIManager.Instance.Pop(); //this pops the popup off
+
             SceneSwitcher.Instance.SwitchScene(id);
+            //SceneSwitcher.Instance.SwitchScene("Kahuariki"); //temp change for demo
         };
 
         VisualElement buttonContainer = new VisualElement();

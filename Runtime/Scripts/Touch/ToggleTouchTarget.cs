@@ -4,9 +4,9 @@ using UnityEngine.InputSystem.EnhancedTouch;
 
 public class ToggleTouchTarget : TouchObject
 {
-    [SerializeField] GameObject toToggle; // gameObject to toggle when tapped
     [SerializeField] GameObject marker; // the gameobject that represents the visual marker
-
+    [SerializeField] GameObject toToggle; // gameObject to toggle visibility of when tapped
+    
     private bool toggle;
     private GameObject[] children;
 
@@ -14,7 +14,9 @@ public class ToggleTouchTarget : TouchObject
     Coroutine indicator; // coroutine to show the user to touch this icon
 
     private Vector3 startingScale;
-    [SerializeField] private Vector3 endScale = new Vector3(1.2f, 1.2f, 1.2f);
+    //[SerializeField] private Vector3 endScale = new Vector3(1.2f, 1.2f, 1.2f);
+    [SerializeField] float amplitude = 0.1f;
+    [SerializeField] float speed = 2f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void OnEnable()
@@ -43,11 +45,16 @@ public class ToggleTouchTarget : TouchObject
 
         //_touchObject.OnTouch += ModelViewer;
         OnTouch -= Toggle;
+
+        if (indicator != null) StopCoroutine(indicator);
+        transform.localScale = startingScale;
     }
 
     void Toggle()
     {
         toggle = !toggle;
+
+        toToggle.SetActive(toggle);
 
         if (!touched)
         {
@@ -55,16 +62,22 @@ public class ToggleTouchTarget : TouchObject
             touched = true;
         }
 
-        for (int i = 0; i < transform.childCount; i++)
-        {
-            //transform.GetChild(i).gameObject.SetActive(toggle);
-            toToggle.transform.GetChild(i).gameObject.SetActive(toggle);
-        }
+        //for (int i = 0; i < transform.childCount; i++)
+        //{
+        //    //transform.GetChild(i).gameObject.SetActive(toggle);
+        //    toToggle.transform.GetChild(i).gameObject.SetActive(toggle);
+        //}
     }
 
     IEnumerator Indicate()
     {
-        marker.transform.localScale = Vector3.Lerp(startingScale, endScale, Time.deltaTime);
-        yield return null;
+        float t = 0f;
+        while(true)
+        {
+            t += Time.deltaTime * speed;
+            float factor = 1f + Mathf.Sin(t) * amplitude;
+            transform.localScale = startingScale * factor;
+            yield return null;
+        }
     }
 }
