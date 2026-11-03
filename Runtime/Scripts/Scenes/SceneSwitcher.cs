@@ -23,7 +23,7 @@ public class SceneSwitcher : MonoBehaviour
 
     // These two are related fields, as every site has an id and a location, with a corresponding scene name to go with it. 
     // Need to store both 
-    public int currentSiteId = -1;
+    //public int currentSiteId = -1;
     public string currentScene;
 
     void Awake()
@@ -54,15 +54,16 @@ public class SceneSwitcher : MonoBehaviour
         // reset any countdown timers in ObserverManager when we change scenes
         //if (ObserverManager.instance != null) ObserverManager.instance.OnSceneChange();
 
-        if (playbackComponent == null) playbackComponent = FindAnyObjectByType<ArPlayback>();
+        //if (playbackComponent == null) playbackComponent = FindAnyObjectByType<ArPlayback>();
 
-        // if we are currently playing back a recording, we want to first stop the playback, then switch the scene.
-        if (playbackComponent != null && playbackComponent.playingBack) {
-            playbackComponent.StopPlayback();
-        }
+        //// if we are currently playing back a recording, we want to first stop the playback, then switch the scene.
+        //if (playbackComponent != null && playbackComponent.playingBack)
+        //{
+        //    playbackComponent.StopPlayback();
+        //}
 
         // Clean up the data from the previous scene when we load a new one.
-        ArRoot.Instance.ResetArSession();
+        //ArRoot.Instance.ResetArSession();
 
         StartCoroutine(LoadScene(scene));
     }
@@ -104,7 +105,7 @@ public class SceneSwitcher : MonoBehaviour
         uiManager.Push(UIScreen.SceneSwitcher);
 
         //anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
-        ArRoot.Instance.aRAnchorOrganizer.ClearAnchors();
+        //ArRoot.Instance.aRAnchorOrganizer.ClearAnchors();
 
         AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
 
