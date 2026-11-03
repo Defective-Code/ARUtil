@@ -21,6 +21,11 @@ public class SceneSwitcher : MonoBehaviour
 
     private ArPlayback playbackComponent;
 
+    // These two are related fields, as every site has an id and a location, with a corresponding scene name to go with it. 
+    // Need to store both 
+    public int currentSiteId = -1;
+    public string currentScene;
+
     void Awake()
     {
         if (Instance != null)
@@ -98,7 +103,8 @@ public class SceneSwitcher : MonoBehaviour
         UIManager uiManager = UIManager.Instance;
         uiManager.Push(UIScreen.SceneSwitcher);
 
-        anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
+        //anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
+        ArRoot.Instance.aRAnchorOrganizer.ClearAnchors();
 
         AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
 
@@ -125,6 +131,8 @@ public class SceneSwitcher : MonoBehaviour
             {
                 // The scene is done loading so we can fill the 
                 loadingScene.allowSceneActivation = true;
+
+                currentScene = scene;
             }
 
             yield return null;

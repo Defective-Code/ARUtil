@@ -1,11 +1,22 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class MapMarkers : MonoBehaviour
 {
     [SerializeField] private SiteData siteData;
 
     private TileMapPanel tileMapPanel;
+
+    [Tooltip("Debug flag - enable to add the option to change the current location to the tapped marker position")]
+    [HideInInspector] 
+    public bool debug;
+
+    [HideInInspector]
+    public LocationData locationData;
 
     private void Awake()
     {
@@ -24,8 +35,10 @@ public class MapMarkers : MonoBehaviour
         tileMapPanel.MarkerClicked += MarkerClickedListener;
     }
 
-    private void MarkerClickedListener(string id)
+    private void MarkerClickedListener(string id, double lat, double lon)
     {
+        Debug.Log($"MapMarkers debug = {debug}, locationData = {locationData}", this);
+
         VisualElement markerContent = new VisualElement();
         markerContent.style.flexGrow = 0;
         markerContent.style.flexShrink = 0;
@@ -72,6 +85,46 @@ public class MapMarkers : MonoBehaviour
         markerContent.Add(switchLabel);
         markerContent.Add(buttonContainer);
 
+        if (debug)
+        {
+            Button changeGPSPosition = new Button { text = "Change GPS position" };
+            changeGPSPosition.clicked += () =>
+            {
+                RetrieveLocationData.Instance.StopService(); // stop retreving the data live
+
+                locationData.latitude = (float)lat;
+                locationData.longitude = (float)lon;
+                locationData.locationDataUpdated?.Invoke(); // call the event that shows location has changed
+            };
+
+            markerContent.Add(changeGPSPosition);
+        }
+
         UIManager.Instance.Push(UIScreen.Popup, markerContent);
     }
 }
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(MapMarkers))]
+public class MapMarkersEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector(); // siteData etc.
+
+        serializedObject.Update();
+
+        var debugProp = serializedObject.FindProperty("debug");
+        EditorGUILayout.PropertyField(debugProp, new GUIContent("Debug flag"));
+
+        if (debugProp.boolValue)
+        {
+            EditorGUILayout.PropertyField(
+                serializedObject.FindProperty("locationData"),
+                new GUIContent("Location Data"));
+        }
+
+        serializedObject.ApplyModifiedProperties();
+    }
+}
+#endif

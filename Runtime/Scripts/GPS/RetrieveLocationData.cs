@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class RetrieveLocationData : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class RetrieveLocationData : MonoBehaviour
     public LocationData locationData; //Scriptable object for storing the position information
 
     private int counter;
+
+    [SerializeField] private float MaxAcceptableAccuracy = 100f; // meters, default is 30m.
+    [SerializeField] private bool debug;
 
     private void Awake()
     {
@@ -29,7 +33,7 @@ public class RetrieveLocationData : MonoBehaviour
     }
 
     private void OnEnable()
-    {   
+    {
         StartService();
     }
 
@@ -92,6 +96,16 @@ public class RetrieveLocationData : MonoBehaviour
         while (true)
         {
             counter = 0; //reset the 10 second timer
+
+            var d = Input.location.lastData;
+            
+            // check that the horizontal accuracy is within the acceptable range we have defined.
+            if ( d.horizontalAccuracy > MaxAcceptableAccuracy)
+            {
+                if (debug) Debug.Log($"Horizontal accuracy was not acceptable for GPS : {d.horizontalAccuracy}");
+                continue;
+            }
+
             locationData.latitude = Input.location.lastData.latitude;
             locationData.longitude = Input.location.lastData.longitude;
             locationData.altitude = Input.location.lastData.altitude;

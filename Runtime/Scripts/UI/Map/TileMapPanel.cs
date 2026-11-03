@@ -83,7 +83,7 @@ public class TileMapPanel : UIViewBehaviour
     [SerializeField] public LocationData locationData;
 
     /// <summary>Fired with the marker id when a key point is tapped/clicked.</summary>
-    public event Action<string> MarkerClicked;
+    public event Action<string, double, double> MarkerClicked;
     /// <summary>Fired once the tile archive has been opened.</summary>
     public event Action Ready;
 
@@ -520,10 +520,10 @@ public class TileMapPanel : UIViewBehaviour
 
         if (clickable)
         {
-            string captured = id;
+            MarkerData data = markers[id];
             el.RegisterCallback<ClickEvent>(evt =>
             {
-                MarkerClicked?.Invoke(captured);
+                MarkerClicked?.Invoke(data.id, data.lat, data.lon);
                 evt.StopPropagation();
             });
         }

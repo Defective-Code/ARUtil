@@ -6,6 +6,7 @@ public class VideoPrefab : MonoBehaviour
     public bool IsInitialized { get; private set; }
 
     public VideoPlayer videoPlayer;
+    //public AudioSource audioSource;
 
     public float x_offset { get; set; }
     public float y_offset { get; set; }
@@ -23,15 +24,37 @@ public class VideoPrefab : MonoBehaviour
             return;
         }
 
+        // force the video to loop if it is not already looping
+        if (!videoPlayer.isLooping)
+        {
+            videoPlayer.isLooping = true;
+        }
+
+        //if (audioSource == null)
+        //{
+        //    Debug.LogWarning("No audiosource was assigned to this video prefab");
+        //}
+
         // Remember the editor scale BEFORE anything changes it
         _authoredScale = videoPlayer.transform.localScale;
 
         videoPlayer.prepareCompleted += OnVideoPrepared;
 
+
         if (!videoPlayer.isPrepared)
             videoPlayer.Prepare();
         else
             OnVideoPrepared(videoPlayer);
+    }
+
+    private void OnEnable()
+    {
+        if (videoPlayer != null) videoPlayer.loopPointReached += OnVideoLoop;
+    }
+
+    private void OnDisable()
+    {
+        if (videoPlayer != null) videoPlayer.loopPointReached -= OnVideoLoop;
     }
 
     void OnVideoPrepared(VideoPlayer vp)
@@ -103,5 +126,11 @@ public class VideoPrefab : MonoBehaviour
     public GameObject GetGameObject()
     {
         return gameObject;
+    }
+
+    // When we finish a playback of our video, we want to stop it and freeze it back at the start
+    private void OnVideoLoop(VideoPlayer vp)
+    {
+        vp.Stop();
     }
 }
