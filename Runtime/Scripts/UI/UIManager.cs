@@ -19,6 +19,9 @@ public class UIManager : MonoBehaviour
     private readonly Dictionary<UIScreen, UIViewBehaviour> _registry = new();
     private readonly Stack<UIViewBehaviour> _stack = new(); // This stack manages our navigation history
 
+    private readonly Queue<System.Func<IEnumerator>> _queue = new(); // queue for managing processes to the UI
+    private bool _running;
+
     private VisualElement _pageLayer, _hudLayer, _overlayLayer;
     private bool _isTransitioning;
 
@@ -103,11 +106,28 @@ public class UIManager : MonoBehaviour
     {
         if (Application.platform == RuntimePlatform.Android)
         {
-            if (UnityEngine.InputSystem.Keyboard.current.escapeKey.isPressed)
+            if (UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 HandleBack();
             }
         }
+    }
+
+    // --- Manage UIView operations in order --------------------------------------
+    private void Enqueue(System.Func<IEnumerator> op)
+    {
+        _queue.Enqueue(op);
+        if (!_running) StartCoroutine(RunQueue());
+    }
+
+    private IEnumerator RunQueue()
+    {
+        _running = true;
+        while (_queue.Count > 0)
+        {
+            yield return _queue.Dequeue()();
+        }
+        _running = false;
     }
 
     // --- view lifecycle --------------------------------------
@@ -149,7 +169,7 @@ public class UIManager : MonoBehaviour
     // This method is used to show the next/new UI element
     public void Push(UIScreen screen, object payload = null)
     {
-        if (_isTransitioning) return;
+        //if (_isTransitioning) return;
         if (!_registry.TryGetValue(screen, out var next))
         {
             Debug.LogError($"No view registered for the screen - check that in the behaviour you set the Id field");
@@ -162,7 +182,7 @@ public class UIManager : MonoBehaviour
         }
         Debug.Log($"{screen.ToString()} - UIScreen Value that is getting Pushed!");
 
-        if (_stack.Count > 0 && _stack.Peek() == next) return;
+        //if (_stack.Count > 0 && _stack.Peek() == next) return;
 
         //if (payload != null && _stack.Count > 0 && _stack.Peek() is IPayloadReceiver receiver)
         if (payload != null && next is IPayloadReceiver receiver)
@@ -170,11 +190,14 @@ public class UIManager : MonoBehaviour
             receiver.SetPayload(payload);
         }
 
-        StartCoroutine(PushRoutine(next));
+        //StartCoroutine(PushRoutine(next));
+        Enqueue(() => PushRoutine(next));
     }
 
     private IEnumerator PushRoutine(UIViewBehaviour next)
     {
+        if (_stack.Count > 0 && _stack.Peek() == next) yield break;
+
         _isTransitioning = true;
 
         if (next.Layer != UILayer.Overlay && _stack.Count > 0)
@@ -191,13 +214,20 @@ public class UIManager : MonoBehaviour
     // This method is backtrack through the UI stack
     public void Pop()
     {
-        if (_isTransitioning || _stack.Count <= 0) return;
+        //if (_isTransitioning || _stack.Count <= 0) return;
+        //StartCoroutine(PopRoutine());
+        Enqueue(PopRoutine);
+    }
 
-        StartCoroutine(PopRoutine());
+    public void Pop(UIScreen screen)
+    {
+        Enqueue(() => _stack.Count > 0 && _stack.Peek().Id == screen ? PopRoutine() : Nothing());
     }
 
     private IEnumerator PopRoutine()
     {
+        if (_stack.Count <= 0) yield break;
+
         _isTransitioning = true;
 
         var current = _stack.Pop();
@@ -214,8 +244,9 @@ public class UIManager : MonoBehaviour
 
     public void PopToRoot()
     {
-        if (_isTransitioning) return;
-        StartCoroutine(PopToRootRoutine());
+        //if (_isTransitioning) return;
+        //StartCoroutine(PopToRootRoutine());
+        Enqueue(PopToRootRoutine);
     }
 
     private IEnumerator PopToRootRoutine()
@@ -225,6 +256,8 @@ public class UIManager : MonoBehaviour
             yield return PopRoutine();
         }
     }
+
+    private static IEnumerator Nothing() { yield break; }
 
     // --- hud --------------------------------------------------------------------------------------------
 

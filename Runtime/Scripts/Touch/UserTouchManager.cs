@@ -80,7 +80,8 @@ public class UserTouchManager : MonoBehaviour
         var activeTouches = Touch.activeTouches;
 
         //if ((Input.touchCount > 0) && (Input.GetTouch(0).phase == TouchPhase.Began))
-        if (activeTouches.Count > 0 && (activeTouches[0].phase == TouchPhase.Began))
+        //if (activeTouches.Count > 0 && (activeTouches[0].phase == TouchPhase.Began))
+        if (activeTouches.Count > 0 && (activeTouches[0].phase == TouchPhase.Ended))
         {
 
             var activeTouch = activeTouches[0];

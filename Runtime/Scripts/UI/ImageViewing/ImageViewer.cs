@@ -1,99 +1,100 @@
 using UnityEngine;
-using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.UIElements;
-using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
-
-using System;
 using System.Collections.Generic;
 
 public class ImageViewer : UIViewBehaviour, IPayloadReceiver
 {
-    private float referenceDpi = 360f; // dpi of the test device. Basically, once the "Feel" for the test device is correct, this will adjust the pixel values so that that feel auto translates to other dpi's/screen sizes by nomralizing against the dpi of the device used to "tune" the values
-
-    private Texture2D _pending;
-
+    [SerializeField] float referenceDpi = 360f;
     public bool debug;
 
-    // Variables to change for feel
+    [Header("Feel")]
     public float minZoom = 1f;
     public float maxZoom = 4f;
-    public float pinchSpeed = 0.01f;
     public float wheelZoomSpeed = 0.05f;
     public float doubleTapTime = 0.3f;
-    public float minDistanceBetweenTaps = 50f; // max screen distance between successive taps to count as a double-tap (rather than two pinch fingers landing)
-    public float defaultZoomValue = 15f; // added to scale (then clamped) when double tapping in
+    public float maxDoubleTapDistance = 50f;
+    public float doubleTapZoom = 2.5f; // absolute target scale (your old +15 always clamped to max)
 
-    // UI Elements 
-    [Header("Overlay root - the element to show/hide")]
-    public VisualElement overlayRoot;
-    private Image imageElement;
-    private VisualElement viewport;
-    private Button closeButton;
+    VisualElement overlayRoot, viewport;
+    Image imageElement;
+    Button closeButton, leftArrow, rightArrow;
 
-    private Dictionary<int, Vector2> activePointers = new();
-    private Dictionary<int, Vector2> prevPointers = new(); // stores the last position of a given pointer (this is for double tap purposes)
+    Texture2D[] _images;
+    int currentImage;
 
-    private Vector2 position;
-    private float scale = 1f;
-    private float lastPinchDistance;
-    private float lastTapTime;
-    private bool dragging;
-    private bool isPinching;
+    // Single source of truth: pointerId -> last known position (panel space). Max 2 tracked.
+    readonly Dictionary<int, Vector2> pointers = new();
 
-    private Vector2 lastTapPosition;
-    private Vector2 lastPointerPos;
+    Vector2 position;
+    float scale = 1f;
+
+    // pinch state
+    float pinchStartDistance, pinchStartScale;
+    Vector2 lastCentroid;
+
+    // double tap / tap detection
+    public float maxTapDuration = 0.25f;   // longer press than this isn't a tap
+    public float tapSlop = 15f;            // max finger travel (dpi-scaled) for a tap
+
+    float lastTapTime = -10f;
+    Vector2 lastTapPosition;
+
+    // per-gesture state (a gesture = first finger down -> all fingers up)
+    bool gestureWasMulti;
+    bool gestureMoved;
+    bool doubleTapConsumed;
+    float gestureStartTime;
+    Vector2 gestureStartPos;
+
+    // Guard against instant closing due to the way opening works - raycast on TouchPhase.Began, so rest of touch goes through to this UI element which instantly closes it
+    // Add small timer to guard against this instant close
+    float openedAt;
+    const float closeGuardTime = 0.35f;
 
     protected override void OnInitialize()
     {
-        EnhancedTouchSupport.Enable(); // required for Touch.activeTouches
-
         overlayRoot = Root.Q<VisualElement>("overlay");
-        overlayRoot.style.display = DisplayStyle.None; // hide the UI by default
+        overlayRoot.style.display = DisplayStyle.None;
         viewport = Root.Q<VisualElement>("viewport");
         imageElement = Root.Q<Image>("image");
-
         closeButton = Root.Q<Button>("closebutton");
+        leftArrow = Root.Q<Button>("left-arrow");
+        rightArrow = Root.Q<Button>("right-arrow");
+
         closeButton?.RegisterCallback<ClickEvent>(_ => Close());
+        viewport?.RegisterCallback<ClickEvent>(_ => Close());
+        imageElement.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
-        viewport?.RegisterCallback<ClickEvent>(_ => Close()); // when the user clicks outside of the image close the popup
-
-        imageElement.RegisterCallback<ClickEvent>(evt =>
-        {
-            evt.StopPropagation(); // stop the click event from bubbling up to parent
-        });
         imageElement.RegisterCallback<PointerDownEvent>(OnPointerDown);
         imageElement.RegisterCallback<PointerMoveEvent>(OnPointerMove);
-        imageElement.RegisterCallback<PointerUpEvent>(OnPointerUp);
+        imageElement.RegisterCallback<PointerUpEvent>(evt => EndPointer(evt.pointerId));
+        imageElement.RegisterCallback<PointerCancelEvent>(evt => EndPointer(evt.pointerId, true));
+        imageElement.RegisterCallback<PointerCaptureOutEvent>(evt => EndPointer(evt.pointerId, true));
         imageElement.RegisterCallback<WheelEvent>(OnWheel);
+
+        leftArrow?.RegisterCallback<ClickEvent>(_ => Step(-1));
+        rightArrow?.RegisterCallback<ClickEvent>(_ => Step(+1));
 
         ResetView();
     }
 
-    void OnDisable()
-    {
-        EnhancedTouchSupport.Disable();
-    }
-
-    public void SetPayload(object payload)
-    {
-        _pending = payload as Texture2D;
-    }
+    public void SetPayload(object payload) => _images = payload as Texture2D[];
 
     public override void OnEnter()
     {
-        if (_pending != null)
+        openedAt = Time.unscaledTime;
+
+        // Checking if slideshow is needed or not
+        bool multi = _images != null && _images.Length > 1;
+        var display = multi ? DisplayStyle.Flex : DisplayStyle.None;
+        if (leftArrow != null) leftArrow.style.display = display;
+        if (rightArrow != null) rightArrow.style.display = display;
+
+        if (_images != null && _images.Length > 0)
         {
-            float aspect = (float)_pending.width / _pending.height;
-
-            imageElement.style.width = Length.Percent(100);
-            imageElement.style.height = StyleKeyword.Auto;
-            imageElement.style.aspectRatio = aspect;
-
-            //imageElement.style.alignSelf = Align.Center;
-
-            imageElement.image = _pending;
+            currentImage = 0;
+            ShowImage(0);
         }
-
         overlayRoot.style.display = DisplayStyle.Flex;
     }
 
@@ -101,16 +102,29 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
     {
         overlayRoot.style.display = DisplayStyle.None;
         imageElement.image = null;
-        _pending = null;
+        _images = null;
+        pointers.Clear();
     }
 
     public void Close()
     {
+        if (Time.unscaledTime - openedAt < closeGuardTime) return;
         UIManager.Instance.Pop();
     }
 
-    public void SetTexture(Texture2D tex)
+    // ---------- image cycling ----------
+    void Step(int dir)
     {
+        currentImage = (currentImage + dir + _images.Length) % _images.Length;
+        ShowImage(currentImage);
+    }
+
+    void ShowImage(int index)
+    {
+        var tex = _images[index];
+        imageElement.style.width = Length.Percent(100);
+        imageElement.style.height = StyleKeyword.Auto;
+        imageElement.style.aspectRatio = (float)tex.width / tex.height;
         imageElement.image = tex;
         ResetView();
     }
@@ -122,90 +136,94 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
         Apply();
     }
 
+    // ---------- input ----------
     void OnPointerDown(PointerDownEvent evt)
     {
-        if (debug) Debug.Log($"Pointer down with id : {evt.pointerId}! ActivePoints : {activePointers.Count}");
+        if (pointers.Count >= 2) return; // ignore 3rd+ finger
 
-        activePointers[evt.pointerId] = evt.position;
+        bool startingGesture = pointers.Count == 0;
+        pointers[evt.pointerId] = evt.position;
+        imageElement.CapturePointer(evt.pointerId);
 
-        // A second (or later) pointer landing means this is a pinch/multi-touch
-        // gesture starting, not a tap. Bail out before any tap logic runs.
-        if (activePointers.Count > 1)
+        if (pointers.Count == 2)
         {
-            isPinching = true;
-            dragging = false;
+            gestureWasMulti = true; // this gesture can never register as a tap
+            BeginPinch();
             return;
         }
 
-        prevPointers.TryGetValue(evt.pointerId, out Vector2 prevPosition); // get the prev position for that point id
+        if (!startingGesture) return;
 
-        bool isDoubleTap =
-            !isPinching &&
-            (Time.time - lastTapTime) < doubleTapTime &&
-            Vector2.Distance(evt.position, prevPosition) < (minDistanceBetweenTaps * DpiScale());
+        // first finger of a new gesture
+        gestureWasMulti = false;
+        gestureMoved = false;
+        gestureStartTime = Time.unscaledTime;
+        gestureStartPos = evt.position;
 
-        //if (debug) Debug.Log($"DoubleTap is : {isDoubleTap}. \nisPinching : {isPinching}\nTime : {Time.time - lastTapTime}\nDistance : {Vector2.Distance(evt.position, lastTapPosition)}\n Dpi scale : {DpiScale()}");
-        if (debug) Debug.Log($"DoubleTap is : {isDoubleTap}. \nisPinching : {isPinching}\nTime : {(Time.time - lastTapTime) < doubleTapTime} | {Time.time - lastTapTime}\nDistance : {Vector2.Distance(evt.position, prevPosition) < (minDistanceBetweenTaps * DpiScale())} | {Vector2.Distance(evt.position, prevPosition)}\n Dpi scale : {DpiScale()}");
+        doubleTapConsumed =
+            Time.unscaledTime - lastTapTime < doubleTapTime &&
+            Vector2.Distance(evt.position, lastTapPosition) < maxDoubleTapDistance * DpiScale();
 
-        if (isDoubleTap)
+        if (doubleTapConsumed)
         {
-            if (scale > minZoom + 0.01f)
-            {
-                ResetView();
-            }
-            else
-            {
-                float targetScale = Mathf.Clamp(scale + defaultZoomValue, minZoom, maxZoom);
-                ZoomTowards(evt.position, targetScale);
-            }
-
-            // consume this tap so a fast third tap doesn't immediately chain into another double-tap
-            lastTapTime = 0f;
+            if (scale > minZoom + 0.01f) ResetView();
+            else ZoomTowards(evt.position, Mathf.Clamp(doubleTapZoom, minZoom, maxZoom));
+            lastTapTime = -10f;
         }
-        else
-        {
-            lastTapTime = Time.time;
-        }
-
-        lastTapPosition = evt.position;
-
-        dragging = true;
-        //lastPointerPos = evt.position;
-        prevPointers[evt.pointerId] = evt.position;
-        imageElement.CapturePointer(evt.pointerId);
     }
 
     void OnPointerMove(PointerMoveEvent evt)
     {
-        if (!dragging || isPinching || Touch.activeTouches.Count >= 2) return;
-        prevPointers.TryGetValue(evt.pointerId, out Vector2 prevPointerPos);
-        Vector2 delta = (Vector2)evt.position - prevPointerPos;
-        position += delta;
-        //lastPointerPos = evt.position;
-        prevPointers[evt.pointerId] = evt.position;
-        Apply();
+        if (!pointers.TryGetValue(evt.pointerId, out Vector2 prev)) return;
+        Vector2 cur = evt.position;
+        pointers[evt.pointerId] = cur;
+
+        if (pointers.Count == 1)
+        {
+            if (!gestureMoved &&
+                Vector2.Distance(cur, gestureStartPos) > tapSlop * DpiScale())
+                gestureMoved = true;
+
+            position += cur - prev;
+            Apply();
+        }
+        else if (pointers.Count == 2)
+        {
+            GetPair(out Vector2 a, out Vector2 b);
+            Vector2 centroid = (a + b) * 0.5f;
+            float dist = Vector2.Distance(a, b);
+
+            position += centroid - lastCentroid; // two-finger pan
+            lastCentroid = centroid;
+
+            float target = Mathf.Clamp(pinchStartScale * dist / pinchStartDistance, minZoom, maxZoom);
+            ZoomTowards(centroid, target); // also calls Apply()
+        }
     }
 
-    void OnPointerUp(PointerUpEvent evt)
+    void EndPointer(int id, bool cancelled = false)
     {
-        if (debug) Debug.Log($"Pointer Up with id : {evt.pointerId}! ActivePoints : {activePointers.Count}");
+        if (!pointers.Remove(id)) return;
+        if (imageElement.HasPointerCapture(id)) imageElement.ReleasePointer(id);
 
-        activePointers.Remove(evt.pointerId);
-        
-        imageElement.ReleasePointer(evt.pointerId);
-        
-        if (activePointers.Count == 1)
+        if (pointers.Count > 0) return; // still mid-gesture (e.g. one finger left after a pinch)
+
+        // All fingers are up: decide whether this whole gesture was a tap.
+        bool isTap =
+            !cancelled &&
+            !gestureWasMulti &&
+            !gestureMoved &&
+            !doubleTapConsumed &&
+            Time.unscaledTime - gestureStartTime < maxTapDuration;
+
+        if (isTap)
         {
-            isPinching = false;
-            dragging = true; // as we only have one finger we want to be able drag it around
+            lastTapTime = Time.unscaledTime;
+            lastTapPosition = gestureStartPos;
         }
-
-        else if (activePointers.Count == 0)
+        else
         {
-            dragging = false; // as we now have no fingers on the screen, dragging should be falses
-            
-            // prevent the finger-lift that ends a pinch from starting a false double-tap window
-            //lastTapTime = 0f;
+            lastTapTime = -10f; // pinches, drags, long presses and the end of a double-tap all clear the window
         }
     }
 
@@ -215,60 +233,33 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
         Apply();
     }
 
-    void Update()
+    // ---------- pinch helpers ----------
+    void BeginPinch()
     {
-        if (Root != null)
+        GetPair(out Vector2 a, out Vector2 b);
+        pinchStartDistance = Mathf.Max(Vector2.Distance(a, b), 1f);
+        pinchStartScale = scale;
+        lastCentroid = (a + b) * 0.5f;
+    }
+
+    void GetPair(out Vector2 a, out Vector2 b)
+    {
+        a = b = default;
+        int i = 0;
+        foreach (var p in pointers.Values)
         {
-            //if (Touch.activeTouches.Count == 2)
-            if (activePointers.Count == 2)
-            {
-                isPinching = true;
-                HandlePinch();
-            }
+            if (i == 0) a = p; else b = p;
+            if (++i == 2) break;
         }
     }
 
-    void HandlePinch()
+    // ---------- transform ----------
+    void ZoomTowards(Vector2 panelPoint, float targetScale)
     {
-        var t0 = Touch.activeTouches[0];
-        var t1 = Touch.activeTouches[1];
-        float currentDistance = Vector2.Distance(t0.screenPosition, t1.screenPosition);
-
-        if (t0.phase == UnityEngine.InputSystem.TouchPhase.Began ||
-            t1.phase == UnityEngine.InputSystem.TouchPhase.Began)
-        {
-            lastPinchDistance = currentDistance;
-            return;
-        }
-
-        float delta = currentDistance - lastPinchDistance;
-        float dpiAdjustedDelta = delta / DpiScale(); // normalize pixel delta against the dpi
-        scale = Mathf.Clamp(scale + dpiAdjustedDelta * pinchSpeed, minZoom, maxZoom);
-        lastPinchDistance = currentDistance;
-        Apply();
-    }
-
-    // Zooms so that the point under screenPoint stays fixed on screen,
-    // i.e. the image appears to zoom in/out around the tap location.
-    void ZoomTowards(Vector2 screenPoint, float targetScale)
-    {
-        if (viewport == null || scale <= 0f)
-        {
-            scale = targetScale;
-            Apply();
-            return;
-        }
-
-        Vector2 viewportCenter = viewport.worldBound.center;
-        Vector2 focal = screenPoint - viewportCenter; // tap point relative to viewport center
-
-        float oldScale = scale;
+        Vector2 focal = panelPoint - viewport.worldBound.center;
+        float old = scale;
         scale = targetScale;
-
-        // Solve for the position that keeps `focal` pointing at the same image-space
-        // location after the scale change.
-        position = focal + (position - focal) * (scale / oldScale);
-
+        position = focal + (position - focal) * (scale / old);
         Apply();
     }
 
@@ -281,8 +272,9 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
 
     void ClampPosition()
     {
-        float maxX = Mathf.Max(0, (viewport.resolvedStyle.width * scale - viewport.resolvedStyle.width) / 2f);
-        float maxY = Mathf.Max(0, (viewport.resolvedStyle.height * scale - viewport.resolvedStyle.height) / 2f);
+        float w = viewport.resolvedStyle.width, h = viewport.resolvedStyle.height;
+        float maxX = Mathf.Max(0, (w * scale - w) * 0.5f);
+        float maxY = Mathf.Max(0, (h * scale - h) * 0.5f);
         position.x = Mathf.Clamp(position.x, -maxX, maxX);
         position.y = Mathf.Clamp(position.y, -maxY, maxY);
     }
@@ -290,7 +282,6 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
     float DpiScale()
     {
         float dpi = Screen.dpi;
-        if (dpi <= 0f) return 1f; // if the dpi is unknown/returns nothing, then we want to set it to 1 so it has no effect on our pixel calculations.
-        return dpi / referenceDpi;
+        return dpi <= 0f ? 1f : dpi / referenceDpi;
     }
 }

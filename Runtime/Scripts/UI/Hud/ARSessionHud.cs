@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 public class ARSessionHud : UIViewBehaviour
 {
 
-    Slider ui_StabilizationLoading;
+    ProgressBar ui_StabilizationLoading;
     Label ui_SessionStateLabel;
 
     // Nav menu
@@ -28,7 +28,7 @@ public class ARSessionHud : UIViewBehaviour
     // logic and button wiring only live in one place.
     void BindUIElements(VisualElement rootElement)
     {
-        ui_StabilizationLoading = rootElement.Q<Slider>("stabilization-loading");
+        ui_StabilizationLoading = rootElement.Q<ProgressBar>("stabilization-loading");
         //ui_ResetAnchorButton = rootElement.Q<Button>("reset-anchor-button");
         ui_SessionStateLabel = rootElement.Q<Label>("session-label");
         
@@ -87,5 +87,15 @@ public class ARSessionHud : UIViewBehaviour
     public void UpdateSliderValue(float value)
     {
         ui_StabilizationLoading.value = value;
+    }
+
+    public void ToggleSlider(bool toggle)
+    {
+        ui_StabilizationLoading.style.display = toggle ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+
+    public void UpdateSliderText(string text)
+    {
+        ui_StabilizationLoading.title = text;
     }
 }

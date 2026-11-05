@@ -47,13 +47,22 @@ public class TileMapPanel : UIViewBehaviour
     [Header("Zoom")]
     [Tooltip("Panel units one tile covers at its native zoom level. Keep 256 even with 512 px tiles for crisp high-DPI screens")]
     public float displayTileSize = 256f;
-    [Tooltip("Initial zoom level. 0 or less = middle of the archive's zoom range")]
-    public float startZoom = 0f;
     [Tooltip("Zoom levels past the archive's last level the map may magnify (tiles get soft)")]
     public float overZoom = 1f;
     [Tooltip("Zoom levels per mouse-wheel notch")]
     public float wheelZoomStep = 0.5f;
     public bool invertWheel = false;
+
+    public enum StartPositionMode { ArchiveCentre, Coordinate, Player }
+
+    [Header("Initial view")]
+    [Tooltip("Where the map is centred when it opens")]
+    public StartPositionMode startPosition = StartPositionMode.ArchiveCentre;
+    [Tooltip("Used when Start Position = Coordinate")]
+    public double startLatitude;
+    public double startLongitude;
+    [Tooltip("Initial zoom level. 0 or less = middle of the archive's zoom range")]
+    public float startZoom = 0f;
 
     [Header("Tile loading")]
     public int maxTileLoadsPerFrame = 6;
@@ -104,6 +113,7 @@ public class TileMapPanel : UIViewBehaviour
     float zoomF = 1f;                       // continuous zoom level
     double uMin, uMax, vMin, vMax;          // coverage of the archive, normalised
     bool viewSetByUser;
+    bool pendingPlayerCentre;   // Player mode, but no GPS fix has arrived yet
     bool dirty;
 
     // ---- tiles ----
@@ -284,14 +294,21 @@ public class TileMapPanel : UIViewBehaviour
         vMin = LatToV(archive.MaxLat);      // north edge = smaller v
         vMax = LatToV(archive.MinLat);
 
-        if (!viewSetByUser)
-        {
-            cu = (uMin + uMax) * 0.5;
-            cv = (vMin + vMax) * 0.5;
-            zoomF = startZoom > 0f ? startZoom : (archive.MinZoom + archive.MaxZoom) * 0.5f;
+        //if (!viewSetByUser)
+        //{
+        //    cu = (uMin + uMax) * 0.5;
+        //    cv = (vMin + vMax) * 0.5;
+        //    zoomF = startZoom > 0f ? startZoom : (archive.MinZoom + archive.MaxZoom) * 0.5f;
+        //}
+        //zoomF = ClampZoom(zoomF);
+        //ClampCentre();
+        if (!viewSetByUser) 
+            ApplyStartView();
+        else 
+        { 
+            zoomF = ClampZoom(zoomF); 
+            ClampCentre(); 
         }
-        zoomF = ClampZoom(zoomF);
-        ClampCentre();
 
         dirty = true;
         openRoutine = null;
@@ -344,6 +361,43 @@ public class TileMapPanel : UIViewBehaviour
     }
 
     // ========================================================== public API
+
+    /// <summary>Applies the Initial view settings. Runs automatically when the archive opens.</summary>
+    public void ApplyStartView()
+    {
+        if (archive == null) return;
+
+        velocity = Vector2.zero;
+        pendingPlayerCentre = false;
+
+        switch (startPosition)
+        {
+            case StartPositionMode.Coordinate:
+                cu = LonToU(startLongitude);
+                cv = LatToV(startLatitude);
+                break;
+
+            case StartPositionMode.Player:
+                if (hasPlayer) { cu = playerU; cv = playerV; }
+                else
+                {
+                    // No fix yet: start at the archive centre, jump to the player on the first fix.
+                    cu = (uMin + uMax) * 0.5;
+                    cv = (vMin + vMax) * 0.5;
+                    pendingPlayerCentre = true;
+                }
+                break;
+
+            default:
+                cu = (uMin + uMax) * 0.5;
+                cv = (vMin + vMax) * 0.5;
+                break;
+        }
+
+        zoomF = ClampZoom(startZoom > 0f ? startZoom : (archive.MinZoom + archive.MaxZoom) * 0.5f);
+        ClampCentre();
+        dirty = true;
+    }
 
     /// <summary>Add (or replace) a key point. Hidden automatically if outside the archive's coverage.</summary>
     public void AddMarker(string id, double lat, double lon, Texture2D icon = null, Color? color = null)
@@ -449,6 +503,13 @@ public class TileMapPanel : UIViewBehaviour
         cv = fv - dy / w1;
         ClampCentre();
         dirty = true;
+    }
+
+    /// <summary>Current view centre in degrees.</summary>
+    public void GetCentreLatLon(out double lat, out double lon)
+    {
+        lon = cu * 360.0 - 180.0;
+        lat = Math.Atan(Math.Sinh(Math.PI * (1.0 - 2.0 * cv))) * 180.0 / Math.PI;
     }
 
     // ===================================================== lat/lon conversion
@@ -909,6 +970,13 @@ public class TileMapPanel : UIViewBehaviour
         float lon = locationData.longitude;
 
         SetPlayerPosition(lat, lon);
+
+        if (pendingPlayerCentre && !viewSetByUser && archive != null)
+        {
+            cu = playerU; cv = playerV;
+            ClampCentre();
+            pendingPlayerCentre = false;
+        }
 
         if (!headingFromMovement) return;
 

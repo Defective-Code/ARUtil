@@ -40,6 +40,8 @@ public class SiteSceneChanger : MonoBehaviour
 
     private int currentSiteIndex = -1; // store the index of the sign within the radius 
 
+    private bool checking;
+
     void Awake()
     {
         if (locationData == null)
@@ -69,6 +71,8 @@ public class SiteSceneChanger : MonoBehaviour
     /// </summary>
     private void CheckForSitesNearby()
     {
+        if (checking) return; // dont want to overlap checking coroutines
+
         //Vector2 currentPos = new Vector2(locationData.latitude, locationData.longitude);
 
         // Check that we have already been near a site before checking we are still in a radius
@@ -82,6 +86,7 @@ public class SiteSceneChanger : MonoBehaviour
    
         }
 
+        checking = true;
         StartCoroutine(CheckSitesCoroutine());
 
     }
@@ -89,26 +94,32 @@ public class SiteSceneChanger : MonoBehaviour
     IEnumerator CheckSitesCoroutine()
     {
         // Otherwise find the nearest sign within the enter radius
-        currentSiteIndex = -1;
-        double best = enterRadius;
-        for (int i = 0; i < siteData.sites.Count; i++)
+
+        try
         {
-            var site = siteData.sites[i];
-            double dist = GeoUtil.Haversine(locationData.latitude, site.lat, locationData.longitude, site.lon);
-            if (dist <= best) 
-            { 
-                best = dist; 
-                currentSiteIndex = i; 
-                break; // if we have found a sign within the radius, we can break as it is not possible to have more than one sign within the radius
+            currentSiteIndex = -1;
+            for (int i = 0; i < siteData.sites.Count; i++)
+            {
+                var site = siteData.sites[i];
+                double dist = GeoUtil.Haversine(locationData.latitude, site.lat, locationData.longitude, site.lon);
+                if (dist <= enterRadius)
+                {
+                    currentSiteIndex = i;
+                    break; // if we have found a sign within the radius, we can break as it is not possible to have more than one sign within the radius
+                }
+                yield return null;
             }
-            yield return null;
-        }
 
-        if (currentSiteIndex != -1)
+            if (currentSiteIndex != -1)
+            {
+
+                var bestSite = siteData.sites[currentSiteIndex];
+                SceneSwitcher.Instance.SwitchScene(bestSite.name); // here switch the scene if we found a site within range
+            }
+        }
+        finally
         {
-
-            var bestSite = siteData.sites[currentSiteIndex];
-            SceneSwitcher.Instance.SwitchScene(bestSite.name); // here switch the scene if we found a site within range
-        }
+            checking = false;
+        }        
     }
 }

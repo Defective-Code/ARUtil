@@ -26,6 +26,8 @@ public class SceneSwitcher : MonoBehaviour
     //public int currentSiteId = -1;
     public string currentScene;
 
+    private bool loading;
+
     void Awake()
     {
         if (Instance != null)
@@ -95,63 +97,77 @@ public class SceneSwitcher : MonoBehaviour
 
     private IEnumerator LoadScene(string scene, bool additive = false)
     {
-        //Debug.Log("Loading the scene");
+        if (loading) yield break; // guard against overlapping scene switches;
+        loading = true;
 
         yield return null;
 
-        //loadingPanel.SetActive(true);
-        //lcanvas.Show();
         UIManager uiManager = UIManager.Instance;
         uiManager.Push(UIScreen.SceneSwitcher);
-
-        //anchorData.ResetAnchors(); // Clear all the previous anchor information from the last scene
-        //ArRoot.Instance.aRAnchorOrganizer.ClearAnchors();
-
-        AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
-
-        if (loadingScene == null)
-        {
-            Debug.LogError($"Scene '{scene}' not found � is it added to Build Settings?");
-            //lcanvas.Hide();
-            uiManager.Pop();
-            yield break;
-        }
-
-        loadingScene.allowSceneActivation = false;
-
         SceneSwitchingUI ui = (SceneSwitchingUI)uiManager.GetUIView(UIScreen.SceneSwitcher);
+        ui.UpdateSliderText($"Switching scene to : {scene}");
 
-        // loops while the scene is loading, and updates the loadingbar
-        while (!loadingScene.isDone)
+        try
         {
-            //Debug.Log("Looping isDone");
+            AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
 
-            ui.UpdateSliderValue(Mathf.Clamp01(loadingScene.progress / 0.9f));
-
-            if (loadingScene.progress >= 0.9f)
+            if (loadingScene == null)
             {
-                // The scene is done loading so we can fill the 
-                loadingScene.allowSceneActivation = true;
-
-                currentScene = scene;
+                Debug.LogError($"Scene '{scene}' not found � is it added to Build Settings?");
+                //lcanvas.Hide();
+                uiManager.Pop();
+                yield break;
             }
 
-            yield return null;
-
-
+            while (!loadingScene.isDone)
+            {
+                //ui.UpdateSliderValue(Mathf.Clamp01(loadingScene.progress / 0.9f));
+                ui.UpdateSliderValue(Mathf.Clamp01(loadingScene.progress / 0.9f) * 100f);
+                yield return null;
+            }
+            currentScene = scene;
+        }
+        finally
+        {
+            uiManager.Pop(UIScreen.SceneSwitcher); // always runs once
+            loading = false;
+            ui.UpdateSliderValue(0.0f);
         }
 
-        // Reinit Vuforia only if the new scene has a VuforiaBehaviour
-        //if (VuforiaBehaviour.Instance != null)
+        //AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);
+
+        //if (loadingScene == null)
         //{
-        //    VuforiaApplication.Instance.Initialize(); // or Init() depending on your SDK version
+        //    Debug.LogError($"Scene '{scene}' not found � is it added to Build Settings?");
+        //    //lcanvas.Hide();
+        //    uiManager.Pop();
+        //    yield break;
         //}
 
-        //lcanvas.Hide(); // hide the loading bar as we are now finished loading the scene
-        uiManager.Pop(); // hide the loading bar as we are now finished loading the scene
-        ui.UpdateSliderValue(0.0f); // reset the loading bar value
+        //loadingScene.allowSceneActivation = false;
 
-        //yield return loadingScene; // wait for loading scene to conclude
-        //if (ObserverManager.instance != null) ObserverManager.instance.isSceneChanging = false; // then set the isSceneChanging flag to false
+        //// loops while the scene is loading, and updates the loadingbar
+        //while (!loadingScene.isDone)
+        //{
+        //    //Debug.Log("Looping isDone");
+
+        //    ui.UpdateSliderValue(Mathf.Clamp01(loadingScene.progress / 0.9f));
+
+        //    if (loadingScene.progress >= 0.9f)
+        //    {
+        //        // The scene is done loading so we can fill the 
+        //        loadingScene.allowSceneActivation = true;
+
+        //        currentScene = scene;
+        //    }
+
+        //    yield return null;
+
+
+        //}
+
+
+        //uiManager.Pop(); // hide the loading bar as we are now finished loading the scene
+        //ui.UpdateSliderValue(0.0f); // reset the loading bar value
     }
 }

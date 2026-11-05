@@ -34,6 +34,46 @@ public sealed class TileArchive : IDisposable
     long[] offsets;
     int[] lengths;
 
+    public struct Info
+    {
+        public int MinZoom, MaxZoom, TileSize, TileCount;
+        public double MinLon, MinLat, MaxLon, MaxLat;
+    }
+
+    /// <summary>Reads only the 64-byte header. Cheap enough to call from editor code.</summary>
+    public static bool TryReadInfo(string path, out Info info)
+    {
+        info = default;
+        try
+        {
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var h = new byte[HeaderSize];
+                int read = 0;
+                while (read < HeaderSize)
+                {
+                    int n = fs.Read(h, read, HeaderSize - read);
+                    if (n <= 0) return false;
+                    read += n;
+                }
+
+                if (h[0] != (byte)'O' || h[1] != (byte)'T' || h[2] != (byte)'I' || h[3] != (byte)'L') return false;
+                if (BitConverter.ToUInt32(h, 4) != 1) return false;
+
+                info.TileCount = (int)BitConverter.ToUInt32(h, 8);
+                info.MinZoom = h[12];
+                info.MaxZoom = h[13];
+                info.TileSize = BitConverter.ToUInt16(h, 14);
+                info.MinLon = BitConverter.ToDouble(h, 24);
+                info.MinLat = BitConverter.ToDouble(h, 32);
+                info.MaxLon = BitConverter.ToDouble(h, 40);
+                info.MaxLat = BitConverter.ToDouble(h, 48);
+                return true;
+            }
+        }
+        catch { return false; }
+    }
+
     public static ulong Key(int z, int x, int y)
     {
         return ((ulong)z << 56) | ((ulong)x << 28) | (uint)y;

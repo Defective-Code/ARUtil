@@ -163,6 +163,8 @@ public class ImageTargetSession : MonoBehaviour
         ArRoot.Instance.aRPlayback.SessionReset += ClearData;
 
         ARSession.stateChanged += OnSessionStateChanged;
+
+        aRSessionHud.ToggleSlider(false); // turn of the loading bar at the start
     }
 
     void OnEnable()
@@ -257,6 +259,9 @@ public class ImageTargetSession : MonoBehaviour
             {
                 if (!anchorData.ContainsKey(imageName))
                 {
+                    aRSessionHud.ToggleSlider(true); // want the slider visible whenever we are tracking an image we dont have an anchor for.
+                    aRSessionHud.UpdateSliderText($"Scanning {imageName}");
+
                     if (!d_Times.ContainsKey(imageName)) // if we dont have an entry for storing the time of tracking for a given image, then create one.
                     {
                         v_currentTracking = imageName;
@@ -279,7 +284,8 @@ public class ImageTargetSession : MonoBehaviour
                         else
                         {
                             d_Times[imageName] += Time.deltaTime;
-                            aRSessionHud.UpdateSliderValue(d_Times[imageName] / se_timeToTrack);
+                            //aRSessionHud.UpdateSliderValue(d_Times[imageName] / se_timeToTrack);
+                            aRSessionHud.UpdateSliderValue(d_Times[imageName] / se_timeToTrack * 100f);
                         }
                     }
                 }
@@ -338,10 +344,7 @@ public class ImageTargetSession : MonoBehaviour
             childSettings.followImageRot ? image.transform.rotation : UprightYaw(image.transform), 
             (ARAnchor anchor) =>
             {
-                //if (debugPrefab != null) Instantiate(debugPrefab, anchor.transform);
-
                 GameObject instance = Instantiate(templateChild, anchor.transform);
-                //instance.transform.SetParent(anchor.transform, false);
                 instance.transform.localRotation = Quaternion.identity;
                 instance.transform.localPosition = Vector3.zero;
 
@@ -351,8 +354,7 @@ public class ImageTargetSession : MonoBehaviour
 
                 instance.SetActive(true); // template was disabled; the live clone should be enabled
 
-                Debug.Log($"Image detected at {image.transform.position} and created an anchor at {anchor.transform.position}");
-                //Debug.Log($"Child was moved to {child.transform.position}");
+                aRSessionHud.ToggleSlider(false); // turn of slider after tracking is done and anchor is made and added to dict
             });
     }
 

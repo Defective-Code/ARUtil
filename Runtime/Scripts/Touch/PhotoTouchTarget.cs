@@ -5,7 +5,7 @@ using UnityEngine;
 //[RequireComponent(typeof(TouchObject))]
 public class PhotoTouchTarget : TouchObject
 {
-    [SerializeField] private Texture2D photo;
+    [SerializeField] private Texture2D[] images;
 
     //private TouchObject _touchObject;
 
@@ -27,6 +27,6 @@ public class PhotoTouchTarget : TouchObject
     private void HandleTouched()
     {
         Debug.Log($"Fired for {gameObject.name}");
-        UIManager.Instance.Push(UIScreen.ImageViewer, photo);
+        UIManager.Instance.Push(UIScreen.ImageViewer, images);
     }
 }
