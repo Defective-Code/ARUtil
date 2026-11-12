@@ -33,10 +33,10 @@ public class SceneListUI : UIViewBehaviour
         //uiPanel.pickingMode = PickingMode.Ignore;
         scenePanel.pickingMode = PickingMode.Ignore;
 
-        root.RegisterCallback<PointerDownEvent>(evt =>
-        {
-            Debug.Log($"Pointer target: {evt.target}");
-        });
+        //root.RegisterCallback<PointerDownEvent>(evt =>
+        //{
+        //    Debug.Log($"Pointer target: {evt.target}");
+        //});
 
 
         Func<VisualElement> makeItem = () =>

@@ -132,6 +132,9 @@ public class SceneSwitcher : MonoBehaviour
             uiManager.Pop(UIScreen.SceneSwitcher); // always runs once
             loading = false;
             ui.UpdateSliderValue(0.0f);
+
+            //ArRoot.Instance.ResetArSession();
+            ArRoot.Instance.aRAnchorOrganizer.ClearAnchors(); // clear all anchors generated from previous scene
         }
 
         //AsyncOperation loadingScene = additive ? SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive) : SceneManager.LoadSceneAsync(scene);

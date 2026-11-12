@@ -1,138 +1,121 @@
 using System.Collections.Generic;
-using TMPro;
-using Unity.IO.Archive;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.Rendering;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
-// class that handles all user touch interactions with specified 3d objects (3d objects with the ... class)
+[DefaultExecutionOrder(-100)]
 public class UserTouchManager : MonoBehaviour
 {
-
     public static UserTouchManager Instance { get; private set; }
 
-    // The list of objects to be touchable
-    //public List<TouchObject> interactableObjects = new List<TouchObject>();
+    [Header("Edge blocking")]
+    [SerializeField, Range(0f, 0.15f)] private float edgeFraction = 0.03f;
+
+    [Header("Ignore Stationary")]
+    [SerializeField, Range(1, 100)] private int stationaryLimit = 30;
 
     public bool debug;
 
-    private Dictionary<string, TouchObject> d_namesToInterface = new Dictionary<string, TouchObject>();
+    private readonly Dictionary<int, bool> decisions = new(); // touchId -> accepted
+    private readonly HashSet<int> seenThisFrame = new();
+    private readonly List<int> staleIds = new();
+    private readonly List<Touch> activeTouches = new();
+    private readonly Dictionary<int, int> stationaryCount = new(); // dictionary to store count of stationary phases for a given touch - if it exceeds a given number for a touch then we know the user is holding a finger down for the most part, so we ignore the touch - for now
+
+    /// All touches that passed the edge filter this frame.
+    public IReadOnlyList<Touch> ActiveTouches => activeTouches;
+
+    public bool IsAccepted(int touchId) =>
+        decisions.TryGetValue(touchId, out bool accepted) && accepted;
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
 
-        DontDestroyOnLoad(this.gameObject);
+        TouchFilter.edgeFraction = edgeFraction;
     }
 
-    void OnEnable()
+    private void OnValidate()
     {
-        UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable();
-
-        //if (interactableObjects.Count <= 0)
-        //{
-        //    Debug.LogWarning("Interactable objects didn't have any objects in it");
-        //    return;
-        //}
-
-        //d_namesToInterface.Clear();
-        //// populate the lookup for interactable objects
-        //foreach(var t in interactableObjects)
-        //{
-        //    d_namesToInterface.Add(t.gameObject.name, t);
-        //}
+        // Lets you tweak the margin live from the inspector in play mode
+        TouchFilter.edgeFraction = edgeFraction;
     }
 
-    void OnDisable()
+    private void OnEnable()
     {
-        UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Disable();
+        if (Instance == this) EnhancedTouchSupport.Enable();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDisable()
     {
-        if (debug)
+        if (Instance == this) EnhancedTouchSupport.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+    private void Update()
+    {
+        activeTouches.Clear();
+        seenThisFrame.Clear();
+
+        foreach (Touch touch in Touch.activeTouches)
         {
-            foreach(string t in d_namesToInterface.Keys)
+            int id = touch.touchId;
+            seenThisFrame.Add(id);
+
+            // Decide once, the first time we see this touch.
+            if (!decisions.TryGetValue(id, out bool accepted))
             {
-                Debug.Log(t);
+                accepted = TouchFilter.IsValid(touch);
+            
+                if (!accepted) stationaryCount[id] = 0; // start count of stationary phase if the touch is in a boundary area
+
+                //decisions[id] = accepted;
+                decisions[id] = true; // by default all touches are allowed, only disallow when the user is touching the outer edge AND hasnt moved in 30 frames.
+
+                if (debug)
+                    Debug.Log($"Touch {id} started at {touch.startScreenPosition}: accepted={accepted}");
             }
+
+            if (accepted) activeTouches.Add(touch);
         }
 
-        // if we have added no interactable objects then don't bother doing the raycast checks
-        if (d_namesToInterface.Count <= 0)
+        foreach (Touch touch in activeTouches)
         {
-            if (debug) Debug.LogWarning("Names To Interface was empty - We have not registered any objects to be interactable in the dictionary");
-            return;
-        }
+            //if (debug) Debug.Log($"Touchphase of touch with id : {id} is {touch.phase}");
 
-        // If we have a UI element open then we also dont need to both doing raycasts as we dont want any touches going "through" the UI
-        if (UIManager.Instance.IsUIElementOpen)
-        {
-            if (debug) Debug.LogWarning("A UI element was open so blocking any raycasts for touchObjects");
-            return;
-        }
-
-
-        var activeTouches = Touch.activeTouches;
-
-        //if ((Input.touchCount > 0) && (Input.GetTouch(0).phase == TouchPhase.Began))
-        //if (activeTouches.Count > 0 && (activeTouches[0].phase == TouchPhase.Began))
-        if (activeTouches.Count > 0 && (activeTouches[0].phase == TouchPhase.Ended))
-        {
-
-            var activeTouch = activeTouches[0];
-
-            //Debug.Log("Touch was detected");
-
-            Ray raycast = Camera.main.ScreenPointToRay(activeTouch.screenPosition);
-            RaycastHit raycastHit;
-
-            if (Physics.Raycast(raycast, out raycastHit))
+            if (touch.phase == TouchPhase.Stationary)
             {
-
-
-                // debug to visualize the normal of the surface that was hit
-                //Debug.DrawLine(raycastHit.normal, raycastHit.normal + new Vector3(5, 5, 5), Color.red, 10f);
-                //Debug.LogError($"Raycast normal : {raycastHit.normal}");
-
-                GameObject hitObject = raycastHit.collider.gameObject;
-
-                Debug.Log($"{hitObject.name} was hit");
-
-                // check that the dictionary is not empty so we actually spawn things and give the correct feedback and that the hit gameobject has a pair gameobject to enable
-                //if (namesToObjects.GetCount() > 0 && namesToObjects.ContainsKey(hitObject) && namesToObjects.GetValue(hitObject) != null) {\\
-
-                // check that the list of interactable gameobjects is not empty so the user has something to interact with
-                //Debug.Log($"{interactableObjects.Count} interactable objects");
-
-                if (d_namesToInterface.TryGetValue(hitObject.name, out TouchObject to))
+                int id = touch.touchId;
+                if (stationaryCount.TryGetValue(id, out var currentCount)) // only  if we have started a counter (meaning if the touch was in the disallowed zone)
                 {
-                    Debug.Log($"{hitObject.name} was invoked!");
-                    //to.OnTouch?.Invoke();
-                    to.RaiseTouchEvent();
+                    stationaryCount[id] = currentCount + 1;
+
+                    if (stationaryCount[id] > stationaryLimit)
+                    {
+                        if (debug) Debug.Log($"Removed touch with touch id : {id} due to stationary count being too high");
+                        decisions[id] = false; // make it so the touch is invalid
+                        stationaryCount.Remove(id); // remove the entry as we have no judged it as not a valid touch
+                    }
                 }
             }
         }
-    }
 
-    // UserTouchManager.cs
-    public void RegisterInteractable(TouchObject touchObject)
-    {
-        if (touchObject == null) return;
-
-        //interactableObjects.Add(touchObject);
-        d_namesToInterface[touchObject.gameObject.name] = touchObject; // overwrite is fine/expected
-    }
-
-    public void UnregisterInteractable(TouchObject touchObject)
-    {
-        if (touchObject == null) return;
-
-        //interactableObjects.Remove(touchObject);
-        d_namesToInterface.Remove(touchObject.gameObject.name);
+        // Forget touches that are gone (Ended shows for one update, then drops out).
+        staleIds.Clear();
+        foreach (int id in decisions.Keys)
+            if (!seenThisFrame.Contains(id)) staleIds.Add(id);
+        foreach (int id in staleIds)
+        {
+            decisions.Remove(id);
+            stationaryCount.Remove(id);
+        }
     }
 }

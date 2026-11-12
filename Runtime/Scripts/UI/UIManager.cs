@@ -64,12 +64,12 @@ public class UIManager : MonoBehaviour
             };
         }
 
-            foreach (var view in views)
-            {
-                Debug.Log($"Mounting - {view.Id}");
-                _registry[view.Id] = view;
-                Mount(view);
-            }
+        foreach (var view in views)
+        {
+            Debug.Log($"Mounting - {view.Id}");
+            _registry[view.Id] = view;
+            Mount(view);
+        }
 
         //SetHudVisible(false);
         Push(rootScreen);
@@ -219,6 +219,10 @@ public class UIManager : MonoBehaviour
         Enqueue(PopRoutine);
     }
 
+    /// <summary>
+    /// Pop a specific UI view from the stack
+    /// </summary>
+    /// <param name="screen"></param>
     public void Pop(UIScreen screen)
     {
         Enqueue(() => _stack.Count > 0 && _stack.Peek().Id == screen ? PopRoutine() : Nothing());

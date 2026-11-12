@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class ImageViewer : UIViewBehaviour, IPayloadReceiver
 {
     [SerializeField] float referenceDpi = 360f;
-    public bool debug;
 
     [Header("Feel")]
     public float minZoom = 1f;
@@ -139,6 +138,9 @@ public class ImageViewer : UIViewBehaviour, IPayloadReceiver
     // ---------- input ----------
     void OnPointerDown(PointerDownEvent evt)
     {
+        // check if the finger is on the edge of the screen and if it is, ignore it
+        //if (CheckTouchPosition.CheckTouchDistanceToBorder(evt.position)) return;
+
         if (pointers.Count >= 2) return; // ignore 3rd+ finger
 
         bool startingGesture = pointers.Count == 0;
